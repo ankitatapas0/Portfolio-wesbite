@@ -5,10 +5,11 @@ build. All delivery assets and generated metadata are included in this repositor
 so a normal checkout can build and run without the original media or encoders.
 
 The complete original `Desktop image assets/` folder is preserved in the Replit
-working copy and the original local project. Previously uploaded originals in this
-GitHub repository have been kept unchanged. Before running the maintenance
-commands below, copy the complete original folder into your checkout; these
-commands compare or regenerate delivery assets using the originals.
+working copy and the original local project, but is intentionally excluded from
+this repository's current version. Earlier Git commits may still contain
+previously uploaded originals. Before running the maintenance commands below,
+copy the complete original folder into your checkout; it is ignored by Git.
+These commands compare or regenerate delivery assets using the originals.
 
 Regenerate delivery copies with:
 
@@ -39,7 +40,8 @@ the corresponding original, and creates:
 To add media, first add a `../../delivery-media/...` import to DesktopPage and
 place the matching original in `Desktop image assets/`. For images, append
 `.webp` to the original filename (for example `Image1.jpg.webp`). Run the script,
-then commit the delivery assets and generated metadata alongside the originals.
+then commit the delivery assets and generated metadata. Keep originals locally
+or in the Replit working copy; do not commit them to this repository.
 Do not put originals in `public/`, which Vite copies wholesale.
 
 Tile videos receive a source only after the existing hover delay or keyboard
