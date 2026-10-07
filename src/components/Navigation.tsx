@@ -98,7 +98,7 @@ export function Navigation({
         <a
           className="nav-link nav-tabs-type-ramp"
           data-label="instagram"
-          href="https://www.instagram.com/ankitap1994"
+          href="https://www.instagram.com/ankitaaa.gif/"
           target="_blank"
           rel="noreferrer"
           onClick={() => setIsMenuOpen(false)}

@@ -1,7 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Figtree:wght@300..900&family=Instrument+Sans:wdth,wght@75..100,400..700&display=swap");
 
 :root {
-  --color-main-1: #101010;
+  --color-main-1: #030303;
   --color-main-2: #f2eae8;
   --font-body: "Instrument Sans", sans-serif;
   --font-display: "Figtree", sans-serif;
@@ -17,7 +17,7 @@
 
 :root[data-theme="inverted"] {
   --color-main-1: #f2eae8;
-  --color-main-2: #101010;
+  --color-main-2: #030303;
 }
 
 * {
@@ -99,7 +99,7 @@ body :is(video, .expanded-media-image-frame):-webkit-full-screen {
   width: 40px;
   height: 18px;
   padding: 2px;
-  border: 1px solid rgb(from var(--color-main-2) r g b / 0.72);
+  border: 1px solid rgb(from var(--color-main-2) r g b / 0.70);
   border-radius: 999px;
   background: transparent;
   cursor: pointer;
