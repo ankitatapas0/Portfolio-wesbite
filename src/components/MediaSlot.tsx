@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { extraSmallViewportQuery } from "../breakpoints";
 import { DetailPageTransition } from "./DetailPageTransition";
 import { TagComponent } from "./tag_component";
+import { imageMetadata, videoMetadata } from "../video-metadata.generated";
 
 const mediaVolumeChangeEventKey = "portfolio-media-volume-change";
 const audioFadeStartVolume = 0.01;
@@ -102,7 +103,10 @@ function ExpandedImage({
   const imageRef = useRef<HTMLImageElement>(null);
   const fullscreenAnimationTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const wasFullscreenRef = useRef(false);
-  const [aspectRatio, setAspectRatio] = useState<number | null>(null);
+  const dimensions = imageMetadata[source];
+  const [aspectRatio, setAspectRatio] = useState<number | null>(
+    () => dimensions ? dimensions.width / dimensions.height : null,
+  );
   const [isFullscreenEntering, setIsFullscreenEntering] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isTouchControlVisible, setIsTouchControlVisible] = useState(false);
@@ -179,6 +183,10 @@ function ExpandedImage({
         ref={imageRef}
         src={source}
         alt={alt}
+        width={dimensions?.width}
+        height={dimensions?.height}
+        loading="lazy"
+        decoding="async"
         onLoad={(event) => {
           const image = event.currentTarget;
           setAspectRatio(image.naturalWidth / image.naturalHeight);
@@ -222,6 +230,8 @@ function ExpandedVideo({
   source,
 }: ExpandedVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const dimensions = videoMetadata[source];
+  const [sourceReady, setSourceReady] = useState(autoPlay);
   const audioFadeFrameRef = useRef<number | undefined>(undefined);
   const hasUserAdjustedVolumeRef = useRef(false);
   const isApplyingSharedVolumeRef = useRef(false);
@@ -244,6 +254,24 @@ function ExpandedVideo({
       : preferences.volume;
     video.muted = preferences.muted;
   }, [autoPlay]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || sourceReady) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setSourceReady(true);
+        observer.disconnect();
+      },
+      {
+        root: video.closest<HTMLElement>(".detail-page-transition-backdrop"),
+        rootMargin: "300px 0px",
+      },
+    );
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, [sourceReady]);
 
   useEffect(() => {
     const hoverQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
@@ -293,7 +321,8 @@ function ExpandedVideo({
           audioFadeFrameRef.current = requestAnimationFrame(fadeIn);
         })
         .catch((error: unknown) => {
-          if (error instanceof DOMException && error.name === "AbortError" && video.paused) return;
+          // Navigation, visibility changes and another player can cancel play().
+          if (error instanceof DOMException && error.name === "AbortError") return;
           console.error(`Unable to play expanded video in slot ${slotId}.`, error);
         });
     };
@@ -384,10 +413,14 @@ function ExpandedVideo({
     <video
       ref={initializeVideo}
       data-detail-page-content
-      src={source}
+      src={sourceReady ? source : undefined}
+      poster={sourceReady ? dimensions?.poster : undefined}
+      width={dimensions?.width}
+      height={dimensions?.height}
+      style={dimensions ? { aspectRatio: `${dimensions.width} / ${dimensions.height}` } : undefined}
       loop
       playsInline
-      preload="metadata"
+      preload={sourceReady ? "metadata" : "none"}
       controls={showControls}
       controlsList="nodownload"
       aria-label={label}
@@ -598,6 +631,8 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
   const playVideo = () => {
     if (!videoRef.current) return;
     videoRef.current.play().catch((error: unknown) => {
+      // Leaving a tile detaches its source and cancels any pending play.
+      if (error instanceof DOMException && error.name === "AbortError") return;
       console.error(`Unable to play video in slot ${slot.id}.`, error);
     });
   };
@@ -652,6 +687,21 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
   const activeVideoSrc = slot.videoSrc ?? (isHoverActive ? slot.hoverVideoSrc : undefined);
   const restLabel = slot.restLabel ?? "Portfolio media";
   const expandedLabel = slot.expandedLabel ?? "Expanded portfolio media";
+
+  useEffect(() => {
+    if (isHoverActive && !isExpanded && (slot.videoSrc || slot.hoverVideoSrc)) {
+      playVideo();
+    } else {
+      setIsHoverVideoReady(false);
+      // Removing src alone can leave the previous resource downloading.
+      // Reset resource selection after React has detached the source.
+      const video = videoRef.current;
+      if (video?.currentSrc) {
+        video.pause();
+        video.load();
+      }
+    }
+  }, [isHoverActive, isExpanded, slot.videoSrc, slot.hoverVideoSrc]);
 
   useEffect(() => {
     const syncExpandedStateWithRoute = () => {
@@ -710,7 +760,6 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
           hoverIntentTimeoutRef.current = setTimeout(() => {
             hoverIntentTimeoutRef.current = undefined;
             activateHover();
-            if (slot.videoSrc || slot.hoverVideoSrc) playVideo();
           }, 400);
         }}
         onMouseLeave={() => {
@@ -721,7 +770,6 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
         onFocus={() => {
           cancelHoverIntent();
           activateHover();
-          if (slot.videoSrc || slot.hoverVideoSrc) playVideo();
         }}
         onBlur={() => {
           cancelHoverIntent();
@@ -754,13 +802,13 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
               <video
                 ref={videoRef}
                 className="media-hover-video"
-                src={slot.hoverVideoSrc}
+                src={isHoverActive && !isExpanded ? slot.hoverVideoSrc : undefined}
                 muted
                 loop
                 playsInline
-                preload="auto"
+                preload="none"
                 aria-hidden="true"
-                onCanPlay={() => setIsHoverVideoReady(true)}
+                onCanPlay={() => setIsHoverVideoReady(isHoverActive && !isExpanded)}
                 onError={() => {
                   setIsHoverVideoReady(false);
                   console.error(`Unable to load hover video in slot ${slot.id}: ${slot.hoverVideoSrc}`);
@@ -770,12 +818,12 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
           ) : activeVideoSrc ? (
             <video
               ref={videoRef}
-              src={activeVideoSrc}
+              src={isHoverActive && !isExpanded ? activeVideoSrc : undefined}
+              poster={videoMetadata[activeVideoSrc]?.poster}
               muted
               loop
               playsInline
-              preload="auto"
-              autoPlay={!slot.videoSrc && Boolean(slot.hoverVideoSrc)}
+              preload="none"
               aria-label={restLabel}
             />
           ) : slot.imageSrc ? (
