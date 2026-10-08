@@ -5,3 +5,5 @@ dist/
 .env.*
 !.env.example
 /Desktop image assets/
+test-results/
+playwright-report/

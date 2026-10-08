@@ -7,6 +7,13 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const page = readFileSync(path.join(root, "src/pages/DesktopPage.tsx"), "utf8");
 const imports = [...page.matchAll(/import (\w+) from "\.\.\/\.\.\/delivery-media\/([^"]+)";/g)];
 const force = process.argv.includes("--force");
+const refreshNavigation = process.argv.includes("--refresh-navigation");
+// Refresh one replaced source without re-encoding every other delivery file.
+const refreshAsset = process.argv.find((argument) => argument.startsWith("--refresh="))
+  ?.slice("--refresh=".length);
+if (refreshAsset && !imports.some(([, , relative]) => relative === refreshAsset)) {
+  throw new Error(`Unknown delivery asset to refresh: ${refreshAsset}`);
+}
 const metadata = [];
 const records = [];
 const imageRecords = [];
@@ -19,29 +26,34 @@ function run(command, args) {
 
 for (const [, name, relative] of imports) {
   const isVideo = relative.endsWith(".mp4");
+  const navigation = relative.startsWith("Navigation/") || relative.endsWith("/Navigation_intro.mp4");
+  const refresh = force || relative === refreshAsset || (refreshNavigation && navigation);
   const originalRelative = isVideo ? relative : relative.replace(/\.webp$/, "");
   const input = path.join(root, "Desktop image assets", originalRelative);
   const output = path.join(root, "delivery-media", relative);
   mkdirSync(path.dirname(output), { recursive: true });
   originalBytes += statSync(input).size;
   console.log(`Optimizing ${originalRelative}`);
-  if (force || !existsSync(output)) {
+  if (refresh || !existsSync(output)) {
     const temporary = isVideo ? `${output}.tmp.mp4` : `${output}.tmp.webp`;
     if (isVideo) {
       // Tile loops are always silent; detail videos retain their full soundtrack.
       const tile = relative.startsWith("Desktop images/") || name === "altCtrlYeahYeahYeahsVideo";
-      const maxSize = tile ? 960 : 1920;
+      const maxSize = navigation ? 1920 : tile ? 960 : 1920;
       run("ffmpeg", [
         "-hide_banner", "-loglevel", "error", "-y", "-i", input,
         "-map", "0:v:0", ...(tile ? ["-an"] : ["-map", "0:a:0?"]),
-        "-vf", `scale=w='min(${maxSize},iw)':h='min(${maxSize},ih)':force_original_aspect_ratio=decrease:force_divisible_by=2`,
-        "-c:v", "libx264", "-preset", "medium", "-crf", tile ? "24" : "23",
+        "-vf", `scale=w='min(${maxSize},iw)':h='min(${maxSize},ih)':force_original_aspect_ratio=decrease:force_divisible_by=2${navigation ? ",gradfun=strength=1.2:radius=16" : ""}`,
+        "-c:v", "libx264", "-preset", navigation ? "slow" : "medium", "-crf", navigation ? "16" : tile ? "24" : "23",
+        ...(navigation ? ["-x264-params", "aq-mode=3:aq-strength=1.2:deblock=-1,-1"] : []),
         "-threads", "4", "-pix_fmt", "yuv420p",
         ...(tile ? [] : ["-c:a", "aac", "-b:a", "160k"]),
         "-movflags", "+faststart", temporary,
       ]);
     } else {
-      run("magick", [input, "-auto-orient", "-resize", "2560x2560>", "-quality", "85", temporary]);
+      run("magick", navigation
+        ? [input, "-auto-orient", "-define", "webp:lossless=true", "-quality", "100", temporary]
+        : [input, "-auto-orient", "-resize", "2560x2560>", "-quality", "85", temporary]);
     }
     renameSync(temporary, output);
   }
@@ -50,7 +62,27 @@ for (const [, name, relative] of imports) {
     const [width, height] = execFileSync("magick", ["identify", "-format", "%w %h", output], { encoding: "utf8" })
       .trim().split(" ").map(Number);
     metadata.push(`import ${name} from ${JSON.stringify(`../delivery-media/${relative}`)};`);
-    imageRecords.push(`  [${name}]: { width: ${width}, height: ${height} },`);
+    const variants = [];
+    if (navigation) {
+      for (const variantWidth of [640, 1280, 1920, 2560].filter((size) => size < width)) {
+        const variantRelative = `${relative}.${variantWidth}w.webp`;
+        const variantOutput = path.join(root, "delivery-media", variantRelative);
+        if (refresh || !existsSync(variantOutput)) {
+          const temporary = `${variantOutput}.tmp.webp`;
+          run("magick", [input, "-auto-orient", "-resize", `${variantWidth}x>`,
+            "-define", "webp:lossless=true", "-quality", "100", temporary]);
+          renameSync(temporary, variantOutput);
+        }
+        deliveryBytes += statSync(variantOutput).size;
+        const variantName = `${name}_${variantWidth}`;
+        metadata.push(`import ${variantName} from ${JSON.stringify(`../delivery-media/${variantRelative}`)};`);
+        variants.push(`${variantName} + " ${variantWidth}w"`);
+      }
+    }
+    const srcSet = variants.length
+      ? `, srcSet: [${[...variants, `${name} + " ${width}w"`].join(", ")}].join(", ")`
+      : "";
+    imageRecords.push(`  [${name}]: { width: ${width}, height: ${height}${srcSet} },`);
     continue;
   }
   const probe = JSON.parse(execFileSync("ffprobe", [
@@ -58,11 +90,13 @@ for (const [, name, relative] of imports) {
     "-of", "json", output,
   ], { encoding: "utf8" })).streams[0];
   const poster = `${output}.poster.webp`;
-  if (force || !existsSync(poster)) {
+  // The navigation tile rests on frame 10 (zero-based frame index 9).
+  const posterFrame = relative === "Desktop images/Navigation_intro.mp4" ? 9 : 0;
+  if (refresh || !existsSync(poster) || posterFrame > 0) {
     run("ffmpeg", [
       "-hide_banner", "-loglevel", "error", "-y", "-i", input,
-      "-frames:v", "1", "-vf", "scale=w='min(1920,iw)':h='min(1920,ih)':force_original_aspect_ratio=decrease",
-      "-c:v", "libwebp", "-quality", "85", "-threads", "2", poster,
+      "-frames:v", "1", "-vf", `select='eq(n,${posterFrame})',scale=w='min(1920,iw)':h='min(1920,ih)':force_original_aspect_ratio=decrease`,
+      "-c:v", "libwebp", ...(navigation ? ["-lossless", "1"] : ["-quality", "85"]), "-threads", "2", poster,
     ]);
   }
   deliveryBytes += statSync(poster).size;
@@ -81,7 +115,7 @@ writeFileSync(path.join(root, "src/video-metadata.generated.ts"), [
   ...records,
   "};",
   "",
-  "export const imageMetadata: Record<string, { width: number; height: number }> = {",
+  "export const imageMetadata: Record<string, { width: number; height: number; srcSet?: string }> = {",
   ...imageRecords,
   "};",
   "",

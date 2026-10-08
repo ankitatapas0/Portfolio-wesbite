@@ -11,6 +11,25 @@ import gettyRestImage from "../delivery-media/Desktop images/4_GettyUnshuttered_
 import operaVideo from "../delivery-media/Desktop images/5_Opera_1x1.mp4";
 import operaVideoPoster from "../delivery-media/Desktop images/5_Opera_1x1.mp4.poster.webp";
 import operaRestImage from "../delivery-media/Desktop images/5_Opera_1x1_image.jpg.webp";
+import xboxPcRedesignVideo from "../delivery-media/Desktop images/Xbox_PC_Redesign_16x9.mp4";
+import xboxPcRedesignVideoPoster from "../delivery-media/Desktop images/Xbox_PC_Redesign_16x9.mp4.poster.webp";
+import navigationIntroVideo from "../delivery-media/Desktop images/Navigation_intro.mp4";
+import navigationIntroVideoPoster from "../delivery-media/Desktop images/Navigation_intro.mp4.poster.webp";
+import navigationIntroDetailVideo from "../delivery-media/Single videos/Navigation_intro.mp4";
+import navigationIntroDetailVideoPoster from "../delivery-media/Single videos/Navigation_intro.mp4.poster.webp";
+import desktopNavigationImage from "../delivery-media/Navigation/Desktop_nav.png.webp";
+import desktopNavigationImage_640 from "../delivery-media/Navigation/Desktop_nav.png.webp.640w.webp";
+import desktopNavigationImage_1280 from "../delivery-media/Navigation/Desktop_nav.png.webp.1280w.webp";
+import xboxModeLowDensityImage from "../delivery-media/Navigation/Xbox mode Low density.png.webp";
+import xboxModeLowDensityImage_640 from "../delivery-media/Navigation/Xbox mode Low density.png.webp.640w.webp";
+import xboxModeLowDensityImage_1280 from "../delivery-media/Navigation/Xbox mode Low density.png.webp.1280w.webp";
+import xboxModeLowDensityImage_1920 from "../delivery-media/Navigation/Xbox mode Low density.png.webp.1920w.webp";
+import xboxModeLowDensityImage_2560 from "../delivery-media/Navigation/Xbox mode Low density.png.webp.2560w.webp";
+import desktopModeHighDensityImage from "../delivery-media/Navigation/Desktop mode high density.png.webp";
+import desktopModeHighDensityImage_640 from "../delivery-media/Navigation/Desktop mode high density.png.webp.640w.webp";
+import desktopModeHighDensityImage_1280 from "../delivery-media/Navigation/Desktop mode high density.png.webp.1280w.webp";
+import desktopModeHighDensityImage_1920 from "../delivery-media/Navigation/Desktop mode high density.png.webp.1920w.webp";
+import desktopModeHighDensityImage_2560 from "../delivery-media/Navigation/Desktop mode high density.png.webp.2560w.webp";
 import operaDetailVideo from "../delivery-media/Opera/Opera_1.mp4";
 import operaDetailVideoPoster from "../delivery-media/Opera/Opera_1.mp4.poster.webp";
 import operaSecondDetailVideo from "../delivery-media/Opera/Opera_2.mp4";
@@ -58,6 +77,13 @@ import xboxDiscordDetailVideo from "../delivery-media/Single videos/Discord x Xb
 import xboxDiscordDetailVideoPoster from "../delivery-media/Single videos/Discord x Xbox.mp4.poster.webp";
 import xboxDiscord2DVideo from "../delivery-media/Single videos/Discord x Xbox - 2D.mp4";
 import xboxDiscord2DVideoPoster from "../delivery-media/Single videos/Discord x Xbox - 2D.mp4.poster.webp";
+import xboxPcAfterImage1 from "../delivery-media/Xbox PC app/After Image 1.png.webp";
+import xboxPcBeforeImage1 from "../delivery-media/Xbox PC app/Before 1.png.webp";
+import xboxPcAfterImage2 from "../delivery-media/Xbox PC app/After image 2.png.webp";
+import xboxPcBeforeImage2 from "../delivery-media/Xbox PC app/Befroe 2.png.webp";
+import xboxPcAfterImage3 from "../delivery-media/Xbox PC app/After Image 3.png.webp";
+import xboxPcBeforeImage3 from "../delivery-media/Xbox PC app/Before 3.png.webp";
+import xboxPcAfterImage4 from "../delivery-media/Xbox PC app/After Image 4.png.webp";
 import anittaNycVideo from "../delivery-media/AM_Spatial sound/Anitta_NYC.mp4";
 import anittaNycVideoPoster from "../delivery-media/AM_Spatial sound/Anitta_NYC.mp4.poster.webp";
 import zeddMobileVideo from "../delivery-media/AM_Spatial sound/Zedd_Mobile.mp4";
@@ -71,6 +97,9 @@ export const videoMetadata: Record<string, { poster: string; width: number; heig
   [xbox2030VisionVideo]: { poster: xbox2030VisionVideoPoster, width: 960, height: 540 },
   [gettyVideo]: { poster: gettyVideoPoster, width: 640, height: 960 },
   [operaVideo]: { poster: operaVideoPoster, width: 960, height: 960 },
+  [xboxPcRedesignVideo]: { poster: xboxPcRedesignVideoPoster, width: 960, height: 540 },
+  [navigationIntroVideo]: { poster: navigationIntroVideoPoster, width: 1920, height: 1080 },
+  [navigationIntroDetailVideo]: { poster: navigationIntroDetailVideoPoster, width: 1920, height: 1080 },
   [operaDetailVideo]: { poster: operaDetailVideoPoster, width: 1920, height: 1080 },
   [operaSecondDetailVideo]: { poster: operaSecondDetailVideoPoster, width: 1920, height: 1080 },
   [operaThirdDetailVideo]: { poster: operaThirdDetailVideoPoster, width: 1920, height: 1080 },
@@ -95,9 +124,12 @@ export const videoMetadata: Record<string, { poster: string; width: number; heig
   [zeddNycVideo]: { poster: zeddNycVideoPoster, width: 1920, height: 1080 },
 };
 
-export const imageMetadata: Record<string, { width: number; height: number }> = {
+export const imageMetadata: Record<string, { width: number; height: number; srcSet?: string }> = {
   [gettyRestImage]: { width: 848, height: 1264 },
   [operaRestImage]: { width: 1080, height: 1080 },
+  [desktopNavigationImage]: { width: 1827, height: 1041, srcSet: [desktopNavigationImage_640 + " 640w", desktopNavigationImage_1280 + " 1280w", desktopNavigationImage + " 1827w"].join(", ") },
+  [xboxModeLowDensityImage]: { width: 3840, height: 2162, srcSet: [xboxModeLowDensityImage_640 + " 640w", xboxModeLowDensityImage_1280 + " 1280w", xboxModeLowDensityImage_1920 + " 1920w", xboxModeLowDensityImage_2560 + " 2560w", xboxModeLowDensityImage + " 3840w"].join(", ") },
+  [desktopModeHighDensityImage]: { width: 3840, height: 2160, srcSet: [desktopModeHighDensityImage_640 + " 640w", desktopModeHighDensityImage_1280 + " 1280w", desktopModeHighDensityImage_1920 + " 1920w", desktopModeHighDensityImage_2560 + " 2560w", desktopModeHighDensityImage + " 3840w"].join(", ") },
   [gettyDetailImage1]: { width: 2560, height: 1920 },
   [gettyDetailImage2]: { width: 2560, height: 1920 },
   [gettyDetailImage3]: { width: 2560, height: 1707 },
@@ -107,4 +139,11 @@ export const imageMetadata: Record<string, { width: number; height: number }> = 
   [gettyDetailImage8]: { width: 2560, height: 1440 },
   [gettyDetailImage9]: { width: 2560, height: 2560 },
   [gettyDetailImage10]: { width: 1280, height: 1265 },
+  [xboxPcAfterImage1]: { width: 2560, height: 1836 },
+  [xboxPcBeforeImage1]: { width: 2560, height: 1836 },
+  [xboxPcAfterImage2]: { width: 2560, height: 1836 },
+  [xboxPcBeforeImage2]: { width: 2560, height: 1836 },
+  [xboxPcAfterImage3]: { width: 2560, height: 1836 },
+  [xboxPcBeforeImage3]: { width: 2560, height: 1836 },
+  [xboxPcAfterImage4]: { width: 2560, height: 1836 },
 };

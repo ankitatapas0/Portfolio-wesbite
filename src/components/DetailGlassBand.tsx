@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type RefObject } from "react";
+import { createGlassRenderer } from "./glassRenderer";
 
 const bandHeight = 70;
 const captureHeight = 140;
@@ -35,9 +36,11 @@ const fragmentShaderSource = `
 
     for (int i = 0; i < 16; i++) {
       float samplePosition = float(i) / 15.0;
+      // GLSL leaves reversed smoothstep edges undefined. Invert an ascending
+      // ramp instead so mobile GPUs calculate the same channel weights.
       vec3 weight = vec3(
-        smoothstep(0.8, 0.2, samplePosition),
-        smoothstep(0.0, 0.5, samplePosition) * smoothstep(1.0, 0.5, samplePosition),
+        1.0 - smoothstep(0.2, 0.8, samplePosition),
+        smoothstep(0.0, 0.5, samplePosition) * (1.0 - smoothstep(0.5, 1.0, samplePosition)),
         smoothstep(0.2, 0.8, samplePosition)
       );
       float chromaticShiftPx = (samplePosition - 0.5) * 0.3 * distancePx;
@@ -55,12 +58,15 @@ const fragmentShaderSource = `
       ${(edgeFeatherHeight / bandHeight).toFixed(4)},
       t
     );
-    gl_FragColor = vec4(finalColor / weightSum, edgeAlpha);
+    // Match the canvas's premultiplied-alpha contract. Transparent pixels
+    // must not carry bright RGB values that can produce mobile edge halos.
+    gl_FragColor = vec4((finalColor / weightSum) * edgeAlpha, edgeAlpha);
   }
 `;
 
 type DetailGlassBandProps = {
   isClosing: boolean;
+  backdropRef: RefObject<HTMLDivElement | null>;
 };
 
 function createShader(
@@ -84,65 +90,7 @@ function createShader(
   return shader;
 }
 
-function drawMedia(
-  context: CanvasRenderingContext2D,
-  media: HTMLImageElement | HTMLVideoElement,
-  bounds: DOMRect,
-  captureTop: number,
-) {
-  const sourceWidth = media instanceof HTMLImageElement
-    ? media.naturalWidth
-    : media.videoWidth;
-  const sourceHeight = media instanceof HTMLImageElement
-    ? media.naturalHeight
-    : media.videoHeight;
-  if (sourceWidth === 0 || sourceHeight === 0) return;
-
-  const styles = getComputedStyle(media);
-  const fit = styles.objectFit;
-  const destinationRatio = bounds.width / bounds.height;
-  const sourceRatio = sourceWidth / sourceHeight;
-  let sourceX = 0;
-  let sourceY = 0;
-  let croppedWidth = sourceWidth;
-  let croppedHeight = sourceHeight;
-  let destinationX = bounds.left;
-  let destinationY = bounds.top - captureTop;
-  let destinationWidth = bounds.width;
-  let destinationHeight = bounds.height;
-
-  if (fit === "cover") {
-    if (sourceRatio > destinationRatio) {
-      croppedWidth = sourceHeight * destinationRatio;
-      sourceX = (sourceWidth - croppedWidth) / 2;
-    } else {
-      croppedHeight = sourceWidth / destinationRatio;
-      sourceY = (sourceHeight - croppedHeight) / 2;
-    }
-  } else if (fit === "contain") {
-    if (sourceRatio > destinationRatio) {
-      destinationHeight = bounds.width / sourceRatio;
-      destinationY += (bounds.height - destinationHeight) / 2;
-    } else {
-      destinationWidth = bounds.height * sourceRatio;
-      destinationX += (bounds.width - destinationWidth) / 2;
-    }
-  }
-
-  context.drawImage(
-    media,
-    sourceX,
-    sourceY,
-    croppedWidth,
-    croppedHeight,
-    destinationX,
-    destinationY,
-    destinationWidth,
-    destinationHeight,
-  );
-}
-
-export function DetailGlassBand({ isClosing }: DetailGlassBandProps) {
+export function DetailGlassBand({ isClosing, backdropRef }: DetailGlassBandProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -153,7 +101,7 @@ export function DetailGlassBand({ isClosing }: DetailGlassBandProps) {
       alpha: true,
       antialias: false,
       depth: false,
-      premultipliedAlpha: false,
+      premultipliedAlpha: true,
       preserveDrawingBuffer: false,
     });
     if (!gl) {
@@ -161,169 +109,77 @@ export function DetailGlassBand({ isClosing }: DetailGlassBandProps) {
       return;
     }
 
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-    if (!vertexShader || !fragmentShader) return;
-
-    const program = gl.createProgram();
-    if (!program) {
-      console.error("Unable to create the detail glass shader program.");
-      return;
-    }
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      console.error("Unable to link the detail glass shader program.", gl.getProgramInfoLog(program));
-      gl.deleteProgram(program);
-      return;
-    }
-
-    const positionLocation = gl.getAttribLocation(program, "aPosition");
-    const textureLocation = gl.getUniformLocation(program, "uTexture");
-    const positionBuffer = gl.createBuffer();
-    const texture = gl.createTexture();
-    if (!positionBuffer || !texture || positionLocation < 0 || !textureLocation) {
-      console.error("Unable to initialize the detail glass shader inputs.");
-      return;
-    }
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(
-      gl.ARRAY_BUFFER,
-      new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]),
-      gl.STATIC_DRAW,
-    );
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-
-    const sourceCanvas = document.createElement("canvas");
-    const sourceContext = sourceCanvas.getContext("2d", { alpha: false });
-    if (!sourceContext) {
-      console.error("Unable to create the detail glass source surface.");
-      return;
-    }
-
-    let sourceBackground = getComputedStyle(document.documentElement)
-      .getPropertyValue("--color-main-1")
-      .trim();
-    const themeObserver = new MutationObserver(() => {
-      sourceBackground = getComputedStyle(document.documentElement)
-        .getPropertyValue("--color-main-1")
-        .trim();
-    });
-    themeObserver.observe(document.documentElement, {
-      attributeFilter: ["data-theme"],
-      attributes: true,
-    });
-
-    let pixelRatio = 1;
-    let surfaceWidth = 0;
-    const resize = () => {
-      pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-      const scrollContainer = document.querySelector<HTMLElement>(
-        ".detail-page-transition-backdrop",
-      );
-      const width = Math.max(scrollContainer?.clientWidth ?? window.innerWidth, 1);
-      surfaceWidth = width;
-      canvas.style.width = `${width}px`;
-      canvas.width = Math.round(width * pixelRatio);
-      canvas.height = Math.round(bandHeight * pixelRatio);
-      sourceCanvas.width = canvas.width;
-      sourceCanvas.height = Math.round(captureHeight * pixelRatio);
-      gl.viewport(0, 0, canvas.width, canvas.height);
-    };
-    resize();
-
-    const visualViewport = window.visualViewport;
-    const scrollContainer = document.querySelector<HTMLElement>(
-      ".detail-page-transition-backdrop",
-    );
-    const scrollContainerResizeObserver = new ResizeObserver(() => resize());
-    if (scrollContainer) {
-      scrollContainerResizeObserver.observe(scrollContainer);
-    }
-    window.addEventListener("resize", resize);
-    visualViewport?.addEventListener("resize", resize);
-
-    let animationFrame = 0;
-    const render = () => {
-      animationFrame = requestAnimationFrame(render);
-
-      const currentScrollContainer = document.querySelector<HTMLElement>(
-        ".detail-page-transition-backdrop",
-      );
-      const currentWidth = Math.max(
-        currentScrollContainer?.clientWidth ?? window.innerWidth,
-        1,
-      );
-      const currentPixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-      if (currentWidth !== surfaceWidth || currentPixelRatio !== pixelRatio) {
-        resize();
+    const initializeGpu = (): (() => void) | null => {
+      const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+      const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+      if (!vertexShader || !fragmentShader) {
+        if (vertexShader) gl.deleteShader(vertexShader);
+        if (fragmentShader) gl.deleteShader(fragmentShader);
+        return null;
       }
 
-      const viewportHeight = visualViewport?.height ?? window.innerHeight;
-      const captureTop = viewportHeight - captureHeight;
-      const viewportWidth = sourceCanvas.width / pixelRatio;
-      sourceContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-      sourceContext.fillStyle = sourceBackground;
-      sourceContext.fillRect(0, 0, viewportWidth, captureHeight);
+      const program = gl.createProgram();
+      const releaseShaders = () => {
+        gl.deleteShader(vertexShader);
+        gl.deleteShader(fragmentShader);
+      };
+      if (!program) {
+        console.error("Unable to create the detail glass shader program.");
+        releaseShaders();
+        return null;
+      }
+      gl.attachShader(program, vertexShader);
+      gl.attachShader(program, fragmentShader);
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        console.error("Unable to link the detail glass shader program.", gl.getProgramInfoLog(program));
+        gl.deleteProgram(program);
+        releaseShaders();
+        return null;
+      }
 
-      const mediaElements = document.querySelectorAll<HTMLElement>(
-        "video[data-detail-page-content], .expanded-media-image-frame[data-detail-page-content]",
+      const positionLocation = gl.getAttribLocation(program, "aPosition");
+      const textureLocation = gl.getUniformLocation(program, "uTexture");
+      const positionBuffer = gl.createBuffer();
+      const texture = gl.createTexture();
+      if (!positionBuffer || !texture || positionLocation < 0 || !textureLocation) {
+        console.error("Unable to initialize the detail glass shader inputs.");
+        if (positionBuffer) gl.deleteBuffer(positionBuffer);
+        if (texture) gl.deleteTexture(texture);
+        gl.deleteProgram(program);
+        releaseShaders();
+        return null;
+      }
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]),
+        gl.STATIC_DRAW,
       );
-      mediaElements.forEach((element) => {
-        const bounds = element.getBoundingClientRect();
-        if (bounds.bottom <= captureTop || bounds.top >= viewportHeight) return;
-
-        const media = element instanceof HTMLVideoElement
-          ? element
-          : element.querySelector("img");
-        if (
-          !media
-          || (media instanceof HTMLImageElement && !media.complete)
-          || (media instanceof HTMLVideoElement && media.readyState < HTMLMediaElement.HAVE_CURRENT_DATA)
-        ) return;
-
-        drawMedia(sourceContext, media, bounds, captureTop);
-      });
-
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGB,
-        gl.RGB,
-        gl.UNSIGNED_BYTE,
-        sourceCanvas,
-      );
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
       gl.useProgram(program);
       gl.uniform1i(textureLocation, 0);
-      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
       gl.enableVertexAttribArray(positionLocation);
       gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      return () => {
+        gl.deleteTexture(texture);
+        gl.deleteBuffer(positionBuffer);
+        gl.deleteProgram(program);
+        releaseShaders();
+      };
     };
-    animationFrame = requestAnimationFrame(render);
 
-    return () => {
-      cancelAnimationFrame(animationFrame);
-      window.removeEventListener("resize", resize);
-      visualViewport?.removeEventListener("resize", resize);
-      scrollContainerResizeObserver?.disconnect();
-      themeObserver.disconnect();
-      gl.deleteTexture(texture);
-      gl.deleteBuffer(positionBuffer);
-      gl.deleteProgram(program);
-      gl.deleteShader(vertexShader);
-      gl.deleteShader(fragmentShader);
-    };
-  }, []);
+    return createGlassRenderer(
+      canvas, gl, backdropRef.current, bandHeight, captureHeight, initializeGpu,
+    );
+  }, [backdropRef]);
 
   return (
     <canvas

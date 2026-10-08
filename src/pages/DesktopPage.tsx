@@ -4,6 +4,7 @@ import {
   type DetailCloseRequest,
   type MediaSlotData,
 } from "../components/MediaSlot";
+import { videoMetadata } from "../video-metadata.generated";
 import spatialSoundVideo from "../../delivery-media/Desktop images/1_AM_SpatialSound_1x1.mp4";
 import xboxDiscordVideo from "../../delivery-media/Desktop images/2_Xbox_DiscordStreamscreen_1x1.mp4";
 import xbox2030VisionVideo from "../../delivery-media/Desktop images/3_Xbox_2030_vision_16x9.mp4";
@@ -11,6 +12,12 @@ import gettyVideo from "../../delivery-media/Desktop images/4_GettyUnshuttered_2
 import gettyRestImage from "../../delivery-media/Desktop images/4_GettyUnshuttered_2x3_image.png.webp";
 import operaVideo from "../../delivery-media/Desktop images/5_Opera_1x1.mp4";
 import operaRestImage from "../../delivery-media/Desktop images/5_Opera_1x1_image.jpg.webp";
+import xboxPcRedesignVideo from "../../delivery-media/Desktop images/Xbox_PC_Redesign_16x9.mp4";
+import navigationIntroVideo from "../../delivery-media/Desktop images/Navigation_intro.mp4";
+import navigationIntroDetailVideo from "../../delivery-media/Single videos/Navigation_intro.mp4";
+import desktopNavigationImage from "../../delivery-media/Navigation/Desktop_nav.png.webp";
+import xboxModeLowDensityImage from "../../delivery-media/Navigation/Xbox mode Low density.png.webp";
+import desktopModeHighDensityImage from "../../delivery-media/Navigation/Desktop mode high density.png.webp";
 import operaDetailVideo from "../../delivery-media/Opera/Opera_1.mp4";
 import operaSecondDetailVideo from "../../delivery-media/Opera/Opera_2.mp4";
 import operaThirdDetailVideo from "../../delivery-media/Opera/Opera 3.mp4";
@@ -39,12 +46,50 @@ import nmd03Video from "../../delivery-media/AM_T1_playlists/NMD_03.mp4";
 import xbox2030DetailVideo from "../../delivery-media/Single videos/Xbox 2030 vision.mp4";
 import xboxDiscordDetailVideo from "../../delivery-media/Single videos/Discord x Xbox.mp4";
 import xboxDiscord2DVideo from "../../delivery-media/Single videos/Discord x Xbox - 2D.mp4";
+import xboxPcAfterImage1 from "../../delivery-media/Xbox PC app/After Image 1.png.webp";
+import xboxPcBeforeImage1 from "../../delivery-media/Xbox PC app/Before 1.png.webp";
+import xboxPcAfterImage2 from "../../delivery-media/Xbox PC app/After image 2.png.webp";
+import xboxPcBeforeImage2 from "../../delivery-media/Xbox PC app/Befroe 2.png.webp";
+import xboxPcAfterImage3 from "../../delivery-media/Xbox PC app/After Image 3.png.webp";
+import xboxPcBeforeImage3 from "../../delivery-media/Xbox PC app/Before 3.png.webp";
+import xboxPcAfterImage4 from "../../delivery-media/Xbox PC app/After Image 4.png.webp";
 import anittaNycVideo from "../../delivery-media/AM_Spatial sound/Anitta_NYC.mp4";
 import zeddMobileVideo from "../../delivery-media/AM_Spatial sound/Zedd_Mobile.mp4";
 import zeddNycVideo from "../../delivery-media/AM_Spatial sound/Zedd_NYC.mp4";
 
 const slots: MediaSlotData[] = [
-  { id: "a", ratio: "16:9", layer: 1, projectLabel: "Project 01", projectTags: ["Editorial"] },
+  {
+    detailSlug: "xbox-app-redesign",
+    id: "a",
+    ratio: "16:9",
+    layer: 1,
+    projectLabel: "Xbox app design",
+    projectTags: ["Product"],
+    imageSrc: videoMetadata[xboxPcRedesignVideo].poster,
+    hoverVideoSrc: xboxPcRedesignVideo,
+    expandedImageBorder: true,
+    expandedMediaSlides: [
+      [{ source: xboxPcAfterImage2, type: "image" }],
+      [
+        { source: xboxPcBeforeImage1, type: "image", caption: "Before" },
+        { source: xboxPcAfterImage1, type: "image", caption: "After" },
+      ],
+      [
+        { source: xboxPcBeforeImage2, type: "image", caption: "Before" },
+        { source: xboxPcAfterImage3, type: "image", caption: "After" },
+      ],
+      [
+        { source: xboxPcBeforeImage3, type: "image", caption: "Before" },
+        { source: xboxPcAfterImage4, type: "image", caption: "After" },
+      ],
+    ],
+    restLabel: "Xbox app design",
+    expandedLabel: "Xbox app design detail page",
+    expandedTitle: "Xbox App Design",
+    expandedSubtitleLines: [
+      "I led the redesign of the Xbox app landing experience to address low discovery and engagement. The redesign is centered around players’ games, interests, and communities, bringing together personalized recommendations, richer game information, social proof, friend activity, and customization",
+    ],
+  },
   { id: "b", ratio: "1:1", layer: 2, projectLabel: "Project 02", projectTags: ["Identity"] },
   {
     detailSlug: "opera-live-visuals",
@@ -125,7 +170,52 @@ const slots: MediaSlotData[] = [
       "Apple Music’s MarCom team wanted to showcase new music releases available in Spatial Sound. I developed a simple visual language that brought the effect of Spatial Sound to life, alongside a flexible brand system designed to scale across large-format displays, desktop, and mobile",
     ],
   },
-  { id: "f", ratio: "16:9", layer: 1, projectLabel: "Project 06", projectTags: ["Digital"] },
+  {
+    detailSlug: "xbox-navigation-system",
+    id: "f",
+    ratio: "16:9",
+    layer: 1,
+    projectLabel: "NAVIGATION",
+    projectTags: ["SYSTEM", "PRODUCT"],
+    imageSrc: videoMetadata[navigationIntroVideo].poster,
+    hoverVideoSrc: navigationIntroDetailVideo,
+    expandedVideoSrc: navigationIntroDetailVideo,
+    expandedImageBorder: true,
+    expandedMediaSlides: [
+      [{ source: navigationIntroDetailVideo, type: "video" }],
+      [{
+        source: xboxModeLowDensityImage,
+        type: "image",
+        caption: "Xbox mode",
+        specifications: [
+          { label: "Player behaviour", value: "Sit back, relax & play. Probably on a couch at 10ft distance from the screen" },
+          { label: "Devices", value: "Console, Handheld, Smart TV" },
+          { label: "Input type", value: "Controller" },
+          { label: "UI density", value: "Low density UI, immersive and less info dense, easily visible 10ft from the screen" },
+          { label: "Navigation type", value: "Classic drill in IA, simple navigation" },
+        ],
+      }],
+      [{
+        source: desktopModeHighDensityImage,
+        type: "image",
+        caption: "Desktop mode",
+        specifications: [
+          { label: "Player behaviour", value: "Players at sitting up close, multi-tasking, wanting more control over aspects of their gameplay" },
+          { label: "Devices", value: "PC, Web" },
+          { label: "Input type", value: "Mouse & Keyboard" },
+          { label: "UI density", value: "High density UI, supports more control on screen, flatter designs, ability to view more information at once" },
+          { label: "Navigation type", value: "FLAT panel like IA, more navigation control" },
+        ],
+      }],
+      [{ source: desktopNavigationImage, type: "image", bordered: false }],
+    ],
+    restLabel: "Xbox Navigation System preview",
+    expandedLabel: "Xbox Navigation System detail page",
+    expandedTitle: "Xbox Navigation System",
+    expandedSubtitleLines: [
+      "I led Xbox’s navigation systems across devices, platforms, and input types. The challenge was creating a familiar information architecture across the ecosystem while adapting navigation to each platform’s conventions and the way players interact, whether through a controller, mouse and keyboard, or touch. These rules were integrated into Xbox’s AI repository, helping designers and developers access the right navigation components and guidelines for their platform and input type",
+    ],
+  },
   { id: "g", ratio: "16:9", layer: 1, projectLabel: "Project 07", projectTags: ["Motion"] },
   {
     detailSlug: "xbox-2030",

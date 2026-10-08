@@ -190,7 +190,7 @@ export function DetailPageTransition({
           {children}
         </section>
       </div>
-      <DetailGlassBand isClosing={isClosing} />
+      <DetailGlassBand isClosing={isClosing} backdropRef={backdropRef} />
       <div
         ref={scrollbarTrackRef}
         className="detail-page-scrollbar"

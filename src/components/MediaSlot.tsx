@@ -2,8 +2,10 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProp
 import { createPortal } from "react-dom";
 import { extraSmallViewportQuery } from "../breakpoints";
 import { DetailPageTransition } from "./DetailPageTransition";
+import { useVideoControlsVisibility } from "./useVideoControlsVisibility";
 import { TagComponent } from "./tag_component";
 import { imageMetadata, videoMetadata } from "../video-metadata.generated";
+import { NavigationSpecificationsTable, type NavigationSpecification } from "./NavigationSpecificationsTable";
 
 const mediaVolumeChangeEventKey = "portfolio-media-volume-change";
 const audioFadeStartVolume = 0.01;
@@ -46,6 +48,7 @@ export type MediaSlotData = {
   alternateExpandedVideoSrc?: string;
   thirdExpandedVideoSrc?: string;
   expandedImageSlides?: string[][];
+  expandedImageBorder?: boolean;
   expandedMediaSlides?: ExpandedMediaSlide[];
   restLabel?: string;
   expandedLabel?: string;
@@ -57,6 +60,9 @@ export type MediaSlotData = {
 };
 
 export type ExpandedMediaAsset = {
+  bordered?: boolean;
+  caption?: string;
+  specifications?: NavigationSpecification[];
   initialTime?: number;
   source: string;
   type: "image" | "video";
@@ -64,7 +70,7 @@ export type ExpandedMediaAsset = {
 
 export type ExpandedMediaSlide = ExpandedMediaAsset[] | {
   assets: ExpandedMediaAsset[];
-  layout: "fountain-pair" | "spatial-pair" | "wide-image";
+  layout: "fountain-pair" | "spatial-pair" | "wide-image" | "matched-height-pair";
 };
 
 type MediaSlotProps = {
@@ -79,6 +85,9 @@ export type DetailCloseRequest = {
 
 type ExpandedImageProps = {
   alt: string;
+  bordered?: boolean;
+  caption?: string;
+  specifications?: NavigationSpecification[];
   grouped?: boolean;
   onError: () => void;
   onLoad: () => void;
@@ -93,10 +102,13 @@ type ExpandedImageStyle = CSSProperties & {
 
 function ExpandedImage({
   alt,
+  bordered = false,
+  caption,
   grouped = false,
   onError,
   onLoad,
   source,
+  specifications,
   transitionClass = "",
 }: ExpandedImageProps) {
   const frameRef = useRef<HTMLDivElement>(null);
@@ -109,7 +121,18 @@ function ExpandedImage({
   );
   const [isFullscreenEntering, setIsFullscreenEntering] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [imageSizes, setImageSizes] = useState("100vw");
   const [isTouchControlVisible, setIsTouchControlVisible] = useState(false);
+
+  useLayoutEffect(() => {
+    if (!dimensions?.srcSet || !frameRef.current) return;
+    const observer = new ResizeObserver(([entry]) => {
+      const width = Math.ceil(entry.contentRect.width);
+      if (width > 0) setImageSizes(`${width}px`);
+    });
+    observer.observe(frameRef.current);
+    return () => observer.disconnect();
+  }, [dimensions?.srcSet]);
   const style: ExpandedImageStyle | undefined = aspectRatio
     ? {
         aspectRatio,
@@ -169,10 +192,10 @@ function ExpandedImage({
     setIsTouchControlVisible(false);
   };
 
-  return (
+  const imageFrame = (
     <div
       ref={frameRef}
-      className={`expanded-media-image-frame${grouped ? " is-grouped" : ""}${aspectRatio ? " is-ready" : ""}${isTouchControlVisible ? " is-fullscreen-control-visible" : ""}${isFullscreenEntering ? " is-fullscreen-entering" : ""}${transitionClass}`}
+      className={`expanded-media-image-frame${bordered ? " is-bordered" : ""}${grouped ? " is-grouped" : ""}${aspectRatio ? " is-ready" : ""}${isTouchControlVisible ? " is-fullscreen-control-visible" : ""}${isFullscreenEntering ? " is-fullscreen-entering" : ""}${transitionClass}`}
       data-detail-page-content
       style={style}
       onPointerDown={(event) => {
@@ -182,6 +205,8 @@ function ExpandedImage({
       <img
         ref={imageRef}
         src={source}
+        srcSet={dimensions?.srcSet}
+        sizes={dimensions?.srcSet ? imageSizes : undefined}
         alt={alt}
         width={dimensions?.width}
         height={dimensions?.height}
@@ -189,7 +214,9 @@ function ExpandedImage({
         decoding="async"
         onLoad={(event) => {
           const image = event.currentTarget;
-          setAspectRatio(image.naturalWidth / image.naturalHeight);
+          setAspectRatio(dimensions?.srcSet
+            ? dimensions.width / dimensions.height
+            : image.naturalWidth / image.naturalHeight);
           onLoad();
         }}
         onError={onError}
@@ -212,6 +239,18 @@ function ExpandedImage({
       </button>
     </div>
   );
+
+  return caption || specifications?.length ? (
+    <div className="expanded-media-captioned-image">
+      {caption && !specifications?.length && (
+        <div className="expanded-media-image-caption nav-tabs-type-ramp">{caption}</div>
+      )}
+      {specifications?.length ? (
+        <NavigationSpecificationsTable columns={specifications} label={caption ?? alt} />
+      ) : null}
+      {imageFrame}
+    </div>
+  ) : imageFrame;
 }
 
 type ExpandedVideoProps = {
@@ -231,17 +270,13 @@ function ExpandedVideo({
 }: ExpandedVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const dimensions = videoMetadata[source];
+  const controlsVisibility = useVideoControlsVisibility(videoRef);
   const [sourceReady, setSourceReady] = useState(autoPlay);
+  const [nearViewport, setNearViewport] = useState(autoPlay);
   const audioFadeFrameRef = useRef<number | undefined>(undefined);
   const hasUserAdjustedVolumeRef = useRef(false);
   const isApplyingSharedVolumeRef = useRef(false);
-  const isPointerOverRef = useRef(false);
   const shouldRestartOnFirstPlayRef = useRef(initialTime > 0);
-  const [supportsHover, setSupportsHover] = useState(
-    () => typeof window !== "undefined"
-      && window.matchMedia("(hover: hover) and (pointer: fine)").matches,
-  );
-  const [showControls, setShowControls] = useState(() => !supportsHover);
   const initializeVideo = useCallback((video: HTMLVideoElement | null) => {
     videoRef.current = video;
     if (!video) return;
@@ -257,12 +292,11 @@ function ExpandedVideo({
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || sourceReady) return;
+    if (!video) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting) return;
-        setSourceReady(true);
-        observer.disconnect();
+        setNearViewport(entry.isIntersecting);
+        if (entry.isIntersecting) setSourceReady(true);
       },
       {
         root: video.closest<HTMLElement>(".detail-page-transition-backdrop"),
@@ -271,16 +305,6 @@ function ExpandedVideo({
     );
     observer.observe(video);
     return () => observer.disconnect();
-  }, [sourceReady]);
-
-  useEffect(() => {
-    const hoverQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
-    const updateHoverSupport = () => {
-      setSupportsHover(hoverQuery.matches);
-      setShowControls(!hoverQuery.matches);
-    };
-    hoverQuery.addEventListener("change", updateHoverSupport);
-    return () => hoverQuery.removeEventListener("change", updateHoverSupport);
   }, []);
 
   useEffect(() => {
@@ -410,68 +434,54 @@ function ExpandedVideo({
   };
 
   return (
-    <video
-      ref={initializeVideo}
-      data-detail-page-content
-      src={sourceReady ? source : undefined}
-      poster={sourceReady ? dimensions?.poster : undefined}
-      width={dimensions?.width}
-      height={dimensions?.height}
-      style={dimensions ? { aspectRatio: `${dimensions.width} / ${dimensions.height}` } : undefined}
-      loop
-      playsInline
-      preload={sourceReady ? "metadata" : "none"}
-      controls={showControls}
-      controlsList="nodownload"
-      aria-label={label}
-      tabIndex={0}
-      onPointerEnter={() => {
-        isPointerOverRef.current = true;
-        if (supportsHover) setShowControls(true);
-      }}
-      onPointerLeave={(event) => {
-        isPointerOverRef.current = false;
-        if (supportsHover && event.currentTarget !== document.activeElement) {
-          setShowControls(false);
-        }
-      }}
-      onFocus={() => setShowControls(true)}
-      onBlur={() => {
-        if (supportsHover && !isPointerOverRef.current) setShowControls(false);
-      }}
-      onLoadedMetadata={(event) => {
-        const video = event.currentTarget;
-        const preferences = loadMediaVolumePreferences();
-        video.currentTime = initialTime;
-        shouldRestartOnFirstPlayRef.current = initialTime > 0;
-        isApplyingSharedVolumeRef.current = true;
-        video.volume = autoPlay
-          ? Math.min(audioFadeStartVolume, preferences.volume)
-          : preferences.volume;
-        video.muted = preferences.muted;
-        if (!autoPlay) {
-          requestAnimationFrame(() => {
-            isApplyingSharedVolumeRef.current = false;
+      <video
+        ref={initializeVideo}
+        data-detail-page-content
+        src={sourceReady ? source : undefined}
+        poster={sourceReady ? dimensions?.poster : undefined}
+        width={dimensions?.width}
+        height={dimensions?.height}
+        style={dimensions ? { aspectRatio: `${dimensions.width} / ${dimensions.height}` } : undefined}
+        loop
+        playsInline
+        preload={sourceReady && nearViewport ? "auto" : "none"}
+        {...controlsVisibility}
+        controlsList="nodownload"
+        tabIndex={0}
+        aria-label={label}
+        onLoadedMetadata={(event) => {
+          const video = event.currentTarget;
+          const preferences = loadMediaVolumePreferences();
+          video.currentTime = initialTime;
+          shouldRestartOnFirstPlayRef.current = initialTime > 0;
+          isApplyingSharedVolumeRef.current = true;
+          video.volume = autoPlay
+            ? Math.min(audioFadeStartVolume, preferences.volume)
+            : preferences.volume;
+          video.muted = preferences.muted;
+          if (!autoPlay) {
+            requestAnimationFrame(() => {
+              isApplyingSharedVolumeRef.current = false;
+            });
+          }
+        }}
+        onPointerDownCapture={beginManualVolumeAdjustment}
+        onKeyDownCapture={beginManualVolumeAdjustment}
+        onError={() => console.error(`Unable to load expanded media in slot ${slotId}: ${source}`)}
+        onVolumeChange={(event) => {
+          if (isApplyingSharedVolumeRef.current) return;
+          saveMediaVolumePreferences({
+            volume: event.currentTarget.volume,
+            muted: event.currentTarget.muted,
           });
-        }
-      }}
-      onPointerDownCapture={beginManualVolumeAdjustment}
-      onKeyDownCapture={beginManualVolumeAdjustment}
-      onError={() => console.error(`Unable to load expanded media in slot ${slotId}: ${source}`)}
-      onVolumeChange={(event) => {
-        if (isApplyingSharedVolumeRef.current) return;
-        saveMediaVolumePreferences({
-          volume: event.currentTarget.volume,
-          muted: event.currentTarget.muted,
-        });
-      }}
-    />
+        }}
+      />
   );
 }
 
 type ExpandedMediaGroup = {
   assets: ExpandedMediaAsset[];
-  layout?: "fountain-pair" | "spatial-pair" | "wide-image";
+  layout?: "fountain-pair" | "spatial-pair" | "wide-image" | "matched-height-pair";
   type: "group";
 };
 
@@ -492,6 +502,7 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
   );
   const [disableExitMotion, setDisableExitMotion] = useState(false);
   const [isHoverActive, setIsHoverActive] = useState(false);
+  const [hoverSourceReady, setHoverSourceReady] = useState(false);
   const [isHoverVideoReady, setIsHoverVideoReady] = useState(false);
   const [tagPosition, setTagPosition] = useState<{ left: number; top: number; width: number } | null>(null);
   const [isExtraSmallViewport, setIsExtraSmallViewport] = useState(
@@ -525,7 +536,7 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
       : expandedVideoSources.map((source) => ({ source, type: "video" }));
   const expandedMediaItems: ExpandedMediaItem[] = isExtraSmallViewport
     ? baseExpandedMediaItems.flatMap((item): ExpandedMediaItem[] => {
-        if (!isExpandedMediaGroup(item)) return [item];
+        if (!isExpandedMediaGroup(item) || item.layout === "matched-height-pair") return [item];
         return [...item.assets].sort((first, second) => {
           if (first.type === second.type) return 0;
           return first.type === "video" ? -1 : 1;
@@ -630,7 +641,10 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
 
   const playVideo = () => {
     if (!videoRef.current) return;
-    videoRef.current.play().catch((error: unknown) => {
+    const video = videoRef.current;
+    video.play().then(() => {
+      if (videoRef.current === video && !video.paused) setIsHoverVideoReady(true);
+    }).catch((error: unknown) => {
       // Leaving a tile detaches its source and cancels any pending play.
       if (error instanceof DOMException && error.name === "AbortError") return;
       console.error(`Unable to play video in slot ${slot.id}.`, error);
@@ -679,12 +693,13 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
 
   const activateHover = () => {
     prepareHoverLayout();
+    setHoverSourceReady(true);
     setIsHoverActive(true);
   };
 
   const canExpand = expandedMediaItems.length > 0;
   const hasHoverVideoCrossfade = Boolean(slot.imageSrc && slot.hoverVideoSrc && !slot.videoSrc);
-  const activeVideoSrc = slot.videoSrc ?? (isHoverActive ? slot.hoverVideoSrc : undefined);
+  const activeVideoSrc = slot.videoSrc ?? slot.hoverVideoSrc;
   const restLabel = slot.restLabel ?? "Portfolio media";
   const expandedLabel = slot.expandedLabel ?? "Expanded portfolio media";
 
@@ -693,15 +708,26 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
       playVideo();
     } else {
       setIsHoverVideoReady(false);
-      // Removing src alone can leave the previous resource downloading.
-      // Reset resource selection after React has detached the source.
       const video = videoRef.current;
-      if (video?.currentSrc) {
+      if (video) {
         video.pause();
-        video.load();
+        video.currentTime = 0;
+        // Keep recently hovered bytes for a quick replay, but release idle
+        // resources and hidden tile buffers when a detail page opens.
+        if ((!hoverSourceReady || isExpanded) && video.currentSrc) video.load();
       }
     }
-  }, [isHoverActive, isExpanded, slot.videoSrc, slot.hoverVideoSrc]);
+  }, [isHoverActive, hoverSourceReady, isExpanded, slot.videoSrc, slot.hoverVideoSrc]);
+
+  useEffect(() => {
+    if (isExpanded) {
+      setHoverSourceReady(false);
+      return;
+    }
+    if (!hoverSourceReady || isHoverActive) return;
+    const release = setTimeout(() => setHoverSourceReady(false), 15000);
+    return () => clearTimeout(release);
+  }, [hoverSourceReady, isHoverActive, isExpanded]);
 
   useEffect(() => {
     const syncExpandedStateWithRoute = () => {
@@ -756,6 +782,7 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
         ref={articleRef}
         className={`media-slot slot-${slot.id} layer-${slot.layer}${canExpand ? " is-clickable" : ""}${isHoverActive ? " is-hovered" : ""}${isHoverVideoReady ? " is-hover-video-ready" : ""}`}
         onMouseEnter={() => {
+          setHoverSourceReady(true);
           cancelHoverIntent();
           hoverIntentTimeoutRef.current = setTimeout(() => {
             hoverIntentTimeoutRef.current = undefined;
@@ -802,11 +829,11 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
               <video
                 ref={videoRef}
                 className="media-hover-video"
-                src={isHoverActive && !isExpanded ? slot.hoverVideoSrc : undefined}
+                src={hoverSourceReady && !isExpanded ? slot.hoverVideoSrc : undefined}
                 muted
                 loop
                 playsInline
-                preload="none"
+                preload={hoverSourceReady && !isExpanded ? (isHoverActive ? "auto" : "metadata") : "none"}
                 aria-hidden="true"
                 onCanPlay={() => setIsHoverVideoReady(isHoverActive && !isExpanded)}
                 onError={() => {
@@ -818,12 +845,12 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
           ) : activeVideoSrc ? (
             <video
               ref={videoRef}
-              src={isHoverActive && !isExpanded ? activeVideoSrc : undefined}
+              src={hoverSourceReady && !isExpanded ? activeVideoSrc : undefined}
               poster={videoMetadata[activeVideoSrc]?.poster}
               muted
               loop
               playsInline
-              preload="none"
+              preload={hoverSourceReady && !isExpanded ? (isHoverActive ? "auto" : "metadata") : "none"}
               aria-label={restLabel}
             />
           ) : slot.imageSrc ? (
@@ -868,13 +895,13 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
           className="expanded-media"
         >
           {slot.expandedTitle && (
-            <div className="expanded-media-copy" data-detail-page-content>
+            <div className="expanded-media-copy" data-detail-page-content data-detail-slug={slot.detailSlug}>
               <h2 className="display">{slot.expandedTitle}</h2>
-              {slot.expandedSubtitleLines?.map((line) => <p className="body" key={line}>{line}</p>)}
-              {slot.alternateExpandedSubtitleLines?.map((line) => <p className="body" key={line}>{line}</p>)}
+              {slot.expandedSubtitleLines?.map((line) => <p className="body" key={line}>{line.replace(/\.\s*$/, "")}</p>)}
+              {slot.alternateExpandedSubtitleLines?.map((line) => <p className="body" key={line}>{line.replace(/\.\s*$/, "")}</p>)}
             </div>
           )}
-          <div className="expanded-media-stream">
+          <div className="expanded-media-stream" data-detail-slug={slot.detailSlug}>
             {expandedMediaItems.map((mediaItem, itemIndex) => (
               <div
                 className={`expanded-media-visual${isExpandedMediaGroup(mediaItem) ? " is-media-pair" : ""}`}
@@ -887,6 +914,14 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
                 {isExpandedMediaGroup(mediaItem) ? (
                   <div
                     className={`expanded-media-image-group is-pair${mediaItem.layout ? ` is-${mediaItem.layout}` : ""}`}
+                    style={mediaItem.layout === "matched-height-pair" ? {
+                      gridTemplateColumns: mediaItem.assets.map((asset) => {
+                        const dimensions = asset.type === "image"
+                          ? imageMetadata[asset.source]
+                          : videoMetadata[asset.source];
+                        return `minmax(0, ${dimensions.width / dimensions.height}fr)`;
+                      }).join(" "),
+                    } : undefined}
                   >
                     {mediaItem.assets.map((asset, mediaIndex) => (
                       asset.type === "video" ? (
@@ -901,6 +936,9 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
                       ) : (
                         <ExpandedImage
                           grouped
+                          bordered={asset.bordered ?? slot.expandedImageBorder}
+                          caption={asset.caption}
+                          specifications={asset.specifications}
                           source={asset.source}
                           alt={`${expandedLabel}, item ${itemIndex + 1}, image ${mediaIndex + 1} of ${mediaItem.assets.length}`}
                           onLoad={() => undefined}
@@ -920,6 +958,9 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
                   />
                 ) : mediaItem.type === "image" ? (
                   <ExpandedImage
+                    bordered={mediaItem.bordered ?? slot.expandedImageBorder}
+                    caption={mediaItem.caption}
+                    specifications={mediaItem.specifications}
                     source={mediaItem.source}
                     alt={`${expandedLabel} ${itemIndex + 1} of ${expandedMediaItems.length}`}
                     onLoad={() => undefined}

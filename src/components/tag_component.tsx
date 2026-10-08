@@ -4,9 +4,11 @@ type TagComponentProps = {
 };
 
 export function TagComponent({ label, primary = false }: TagComponentProps) {
+  const titleCaseLabel = label.toLowerCase().replace(/\b[a-z]/g, (letter) => letter.toUpperCase());
+
   return (
     <span className={`project-tag${primary ? " project-tag-primary" : ""}`}>
-      {label}
+      {titleCaseLabel}
     </span>
   );
 }

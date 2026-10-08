@@ -62,7 +62,8 @@ for (const [, name, relative] of imports) {
   const tile = relative.startsWith("Desktop images/") || name === "altCtrlYeahYeahYeahsVideo";
   assert.equal(video.codec_name, "h264");
   assert.equal(video.pix_fmt, "yuv420p");
-  assert(video.width <= (tile ? 960 : 1920) && video.height <= (tile ? 960 : 1920));
+  const maxSize = relative.endsWith("/Navigation_intro.mp4") ? 1920 : tile ? 960 : 1920;
+  assert(video.width <= maxSize && video.height <= maxSize);
   assert(Math.abs(Number(after.format.duration) - Number(before.format.duration)) < 0.15, `Video was trimmed: ${relative}`);
   assert.equal(video.avg_frame_rate, originalVideo.avg_frame_rate, `Frame rate changed: ${relative}`);
   assert(Math.abs(video.width / video.height - originalVideo.width / originalVideo.height) < 0.01, `Aspect ratio changed: ${relative}`);
@@ -75,6 +76,6 @@ for (const [, name, relative] of imports) {
   videos++;
 }
 assert(deliveryBytes < originalBytes, "Delivery media is not smaller than originals");
-assert(!readFileSync(path.join(root, "src/components/MediaSlot.tsx"), "utf8").includes('preload="auto"'));
+assert(readFileSync(path.join(root, "src/components/MediaSlot.tsx"), "utf8").includes('preload={sourceReady && nearViewport ? "auto" : "none"}'), "Detail buffering must remain gated by viewport interest");
 console.log(`Verified ${videos} full-length, faststart videos with posters and ${images} WebP images.`);
 console.log(`Delivery: ${(deliveryBytes / 1e6).toFixed(1)} MB; originals: ${(originalBytes / 1e6).toFixed(1)} MB.`);

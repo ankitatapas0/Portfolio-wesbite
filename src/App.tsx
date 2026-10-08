@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigation, type PageName } from "./components/Navigation";
 import { DesktopPage } from "./pages/DesktopPage";
 import { SimplePage } from "./pages/SimplePage";
+import { useLandscapeScreenGuard } from "./hooks/useLandscapeScreenGuard";
 
 function getPage(): PageName {
   const page = window.location.hash.replace("#/", "");
@@ -9,6 +10,7 @@ function getPage(): PageName {
 }
 
 export default function App() {
+  const isLandscapeScreenBlocked = useLandscapeScreenGuard();
   const [activePage, setActivePage] = useState<PageName>(getPage);
   const [desktopCloseRequest, setDesktopCloseRequest] = useState({
     disableExitMotion: false,
@@ -29,6 +31,16 @@ export default function App() {
       delete document.documentElement.dataset.theme;
     }
   }, [isThemeInverted]);
+
+  if (isLandscapeScreenBlocked) {
+    return (
+      <main className="landscape-size-notice" role="alert">
+        <p className="description-type-ramp">
+          This content needs a larger screen. Rotate your device to portrait or switch to a device with a bigger screen
+        </p>
+      </main>
+    );
+  }
 
   return (
     <div className="app-shell">

@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "optimize-media": "node scripts/optimize-media.mjs",
-    "check-media": "node scripts/check-media.mjs"
+    "check-media": "node scripts/check-media.mjs",
+    "check-glass:browsers": "playwright test --config scripts/glass/playwright.config.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
@@ -18,6 +19,7 @@
     "react-dom": "latest"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@types/react": "latest",
     "@types/react-dom": "latest"
   }
