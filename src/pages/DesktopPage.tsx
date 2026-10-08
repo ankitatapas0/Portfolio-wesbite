@@ -12,7 +12,20 @@ import gettyVideo from "../../delivery-media/Desktop images/4_GettyUnshuttered_2
 import gettyRestImage from "../../delivery-media/Desktop images/4_GettyUnshuttered_2x3_image.png.webp";
 import operaVideo from "../../delivery-media/Desktop images/5_Opera_1x1.mp4";
 import operaRestImage from "../../delivery-media/Desktop images/5_Opera_1x1_image.jpg.webp";
+import weekndImage from "../../delivery-media/Desktop images/MM_weekend_noLogo.png.webp";
 import xboxPcRedesignVideo from "../../delivery-media/Desktop images/Xbox_PC_Redesign_16x9.mp4";
+import xboxCopilotVideo from "../../delivery-media/Desktop images/Xbox_copilot_16x9.mp4";
+import xboxCopilotDetailVideo from "../../delivery-media/Xbox Copilot/Main copilot video.mp4";
+import xboxCopilotImage1 from "../../delivery-media/Xbox Copilot/Image1_00000.png.webp";
+import xboxCopilotImage2 from "../../delivery-media/Xbox Copilot/Image2_00000.png.webp";
+import xboxCopilotImage3 from "../../delivery-media/Xbox Copilot/Image3_00000.png.webp";
+import xboxCopilotImage4 from "../../delivery-media/Xbox Copilot/Image4_00000.png.webp";
+import xboxCopilotImage5 from "../../delivery-media/Xbox Copilot/Image5_00000.png.webp";
+import xboxCopilotImage6 from "../../delivery-media/Xbox Copilot/Image6_00000.png.webp";
+import xboxCopilotImage7 from "../../delivery-media/Xbox Copilot/Image7_00000.png.webp";
+import xboxCopilotImage8 from "../../delivery-media/Xbox Copilot/Image8_00000.png.webp";
+import xboxCopilotImage9 from "../../delivery-media/Xbox Copilot/Image9_00000.png.webp";
+import xboxCopilotImage10 from "../../delivery-media/Xbox Copilot/Image10_00000.png.webp";
 import navigationIntroVideo from "../../delivery-media/Desktop images/Navigation_intro.mp4";
 import navigationIntroDetailVideo from "../../delivery-media/Single videos/Navigation_intro.mp4";
 import desktopNavigationImage from "../../delivery-media/Navigation/Desktop_nav.png.webp";
@@ -250,7 +263,16 @@ const slots: MediaSlotData[] = [
       "I led the design of the stream launch screen for Xbox players sharing their gameplay on Discord, creating a shared brand moment before players go live with their audience. This exploration used looping circular motion and contrasts of light and dark to bring the visual identities of Xbox and Discord together",
     ],
   },
-  { id: "j", ratio: "1:1", layer: 2, projectLabel: "Project 10", projectTags: ["Campaign"] },
+  {
+    id: "j",
+    ratio: "1:1",
+    layer: 2,
+    projectLabel: "The Weeknd",
+    projectTags: ["Social Media"],
+    imageSrc: weekndImage,
+    restLabel: "The Weeknd",
+    externalHref: "https://www.instagram.com/p/CSNq7TsFPeJ/",
+  },
   { id: "k", ratio: "2:3", layer: 2, projectLabel: "Project 11", projectTags: ["Print"] },
   { id: "l", ratio: "16:9", layer: 2, projectLabel: "Project 12", projectTags: ["Film"] },
   { id: "m", ratio: "16:9", layer: 3, projectLabel: "Project 13", projectTags: ["Digital"] },
@@ -298,7 +320,35 @@ const slots: MediaSlotData[] = [
     showExpandedCopyOnAllSlides: true,
   },
   { id: "o", ratio: "1:1", layer: 3, projectLabel: "Project 15", projectTags: ["Motion"] },
-  { id: "p", ratio: "16:9", layer: 3, projectLabel: "Project 16", projectTags: ["Digital"] },
+  {
+    detailSlug: "xbox-copilot-ideation",
+    id: "p",
+    ratio: "16:9",
+    layer: 3,
+    projectLabel: "Xbox Copilot",
+    projectTags: ["Product", "Storytelling"],
+    imageSrc: videoMetadata[xboxCopilotVideo].poster,
+    hoverVideoSrc: xboxCopilotVideo,
+    restLabel: "Xbox Copilot preview",
+    expandedLabel: "Xbox Copilot Ideation detail page",
+    expandedTitle: "Xbox Copilot Ideation",
+    expandedSubtitleLines: [
+      "I worked with a small group of product leaders to explore how Xbox Copilot could solve meaningful problems for players. While the project never reached production following the cancellation of the broader Xbox Copilot initiative, the process and ideas felt worth sharing",
+    ],
+    expandedMediaSlides: [
+      [{ source: xboxCopilotDetailVideo, type: "video" }],
+      [{ source: xboxCopilotImage1, type: "image" }],
+      [{ source: xboxCopilotImage2, type: "image" }],
+      [{ source: xboxCopilotImage3, type: "image" }],
+      [{ source: xboxCopilotImage4, type: "image" }],
+      [{ source: xboxCopilotImage5, type: "image" }],
+      [{ source: xboxCopilotImage6, type: "image" }],
+      [{ source: xboxCopilotImage7, type: "image" }],
+      [{ source: xboxCopilotImage8, type: "image" }],
+      [{ source: xboxCopilotImage9, type: "image" }],
+      [{ source: xboxCopilotImage10, type: "image" }],
+    ],
+  },
 ];
 
 type DesktopPageProps = {

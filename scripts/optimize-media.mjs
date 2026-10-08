@@ -90,8 +90,17 @@ for (const [, name, relative] of imports) {
     "-of", "json", output,
   ], { encoding: "utf8" })).streams[0];
   const poster = `${output}.poster.webp`;
-  // The navigation tile rests on frame 10 (zero-based frame index 9).
-  const posterFrame = relative === "Desktop images/Navigation_intro.mp4" ? 9 : 0;
+  // Navigation rests on frame 10; Copilot rests on the final source frame.
+  const copilot = relative === "Desktop images/Xbox_copilot_16x9.mp4";
+  const posterFrame = copilot
+    ? Number(JSON.parse(execFileSync("ffprobe", [
+      "-v", "error", "-select_streams", "v:0", "-count_frames",
+      "-show_entries", "stream=nb_read_frames", "-of", "json", input,
+    ], { encoding: "utf8" })).streams[0].nb_read_frames) - 1
+    : relative === "Desktop images/Navigation_intro.mp4" ? 9 : 0;
+  if (!Number.isInteger(posterFrame) || posterFrame < 0) {
+    throw new Error(`Unable to determine poster frame: ${relative}`);
+  }
   if (refresh || !existsSync(poster) || posterFrame > 0) {
     run("ffmpeg", [
       "-hide_banner", "-loglevel", "error", "-y", "-i", input,

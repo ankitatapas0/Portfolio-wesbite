@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState, type RefObject, type VideoHTMLAttributes } from "react";
+import { observeVideoFullscreen } from "./videoFullscreen";
 
 // Preserve the browser's existing player design; only manage when it is revealed.
 export function useVideoControlsVisibility(
   videoRef: RefObject<HTMLVideoElement | null>,
 ): VideoHTMLAttributes<HTMLVideoElement> {
   const [controls, setControls] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
   const hovering = useRef(false);
   const touching = useRef(false);
   const keyboardFocused = useRef(false);
@@ -17,6 +19,13 @@ export function useVideoControlsVisibility(
   }, []);
 
   useEffect(() => {
+    const video = videoRef.current;
+    const stopObservingFullscreen = video
+      ? observeVideoFullscreen(video, (active) => {
+          clearTimer();
+          setFullscreen(active);
+        })
+      : undefined;
     const hoverQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
     const reset = () => {
       clearTimer();
@@ -46,6 +55,7 @@ export function useVideoControlsVisibility(
     document.addEventListener("pointerup", finishTouch, true);
     document.addEventListener("pointercancel", finishTouch, true);
     return () => {
+      stopObservingFullscreen?.();
       clearTimer();
       hoverQuery.removeEventListener("change", reset);
       document.removeEventListener("pointerdown", outside, true);
@@ -55,7 +65,7 @@ export function useVideoControlsVisibility(
   }, [clearTimer, videoRef]);
 
   return {
-    controls,
+    controls: fullscreen || controls,
     onPointerEnter: (event) => {
       if (event.pointerType !== "mouse") return;
       hovering.current = true;

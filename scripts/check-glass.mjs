@@ -4,6 +4,8 @@
 // Cross-engine capability-gated checks and Getty snapshots:
 // pnpm --filter @workspace/portfolio check-glass:browsers
 // See docs/glass-performance.md; neither runner measures real-device FPS.
+// Non-baseline runs also fault restored initialization: shader/program null,
+// compile/link failure, missing input locations, and buffer/texture null.
 import { writeFile } from "node:fs/promises";
 import { installGlassFaultProbe, checkGlassFaults } from "./glass-fault-checks.mjs";
 

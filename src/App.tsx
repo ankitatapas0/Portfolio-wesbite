@@ -3,15 +3,18 @@ import { Navigation, type PageName } from "./components/Navigation";
 import { DesktopPage } from "./pages/DesktopPage";
 import { SimplePage } from "./pages/SimplePage";
 import { useLandscapeScreenGuard } from "./hooks/useLandscapeScreenGuard";
+import { portfolioRouteChangeEvent } from "./portfolioRouting";
 
-function getPage(): PageName {
-  const page = window.location.hash.replace("#/", "");
+function getPage(hash: string): PageName {
+  const page = hash.replace("#/", "");
   return page === "about" ? page : "desktop";
 }
 
 export default function App() {
-  const isLandscapeScreenBlocked = useLandscapeScreenGuard();
-  const [activePage, setActivePage] = useState<PageName>(getPage);
+  const [routeHash, setRouteHash] = useState(() => window.location.hash);
+  const activePage = getPage(routeHash);
+  const isDesktopGallery = ["", "#", "#/", "#/desktop", "#/desktop/"].includes(routeHash);
+  const isLandscapeScreenBlocked = useLandscapeScreenGuard(isDesktopGallery);
   const [desktopCloseRequest, setDesktopCloseRequest] = useState({
     disableExitMotion: false,
     id: 0,
@@ -19,9 +22,15 @@ export default function App() {
   const [isThemeInverted, setIsThemeInverted] = useState(false);
 
   useEffect(() => {
-    const handleHashChange = () => setActivePage(getPage());
+    const handleHashChange = () => setRouteHash(window.location.hash);
     window.addEventListener("hashchange", handleHashChange);
-    return () => window.removeEventListener("hashchange", handleHashChange);
+    window.addEventListener("popstate", handleHashChange);
+    window.addEventListener(portfolioRouteChangeEvent, handleHashChange);
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+      window.removeEventListener("popstate", handleHashChange);
+      window.removeEventListener(portfolioRouteChangeEvent, handleHashChange);
+    };
   }, []);
 
   useEffect(() => {

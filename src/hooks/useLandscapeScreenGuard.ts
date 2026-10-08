@@ -16,12 +16,13 @@ function shouldBlockLandscapeScreen() {
   return (
     isMobileOrTablet &&
     window.matchMedia(landscapeQuery).matches &&
-    viewportHeight < 720
+    viewportHeight < 667
   );
 }
 
-export function useLandscapeScreenGuard() {
+export function useLandscapeScreenGuard(enabled: boolean) {
   const [isBlocked, setIsBlocked] = useState(shouldBlockLandscapeScreen);
+  const isPageBlocked = enabled && isBlocked;
 
   useEffect(() => {
     const landscape = window.matchMedia(landscapeQuery);
@@ -44,9 +45,9 @@ export function useLandscapeScreenGuard() {
   }, []);
 
   useEffect(() => {
-    document.documentElement.classList.toggle("has-small-landscape-viewport", isBlocked);
+    document.documentElement.classList.toggle("has-small-landscape-viewport", isPageBlocked);
     return () => document.documentElement.classList.remove("has-small-landscape-viewport");
-  }, [isBlocked]);
+  }, [isPageBlocked]);
 
-  return isBlocked;
+  return isPageBlocked;
 }

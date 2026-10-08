@@ -15,14 +15,34 @@ export function installGlassFaultProbe() {
       const fault = isGlass(this) && window.glassFault;
       if (fault) fault.calls[kind]++;
       if ((kind === "Buffer" || kind === "Texture") && hit(this, kind.toLowerCase())) return null;
+      if (kind === "Shader" && hit(this,
+        args[0] === this.VERTEX_SHADER ? "createVertexShader" : "createFragmentShader")) return null;
+      if (kind === "Program" && hit(this, "createProgram")) return null;
       const resource = create.apply(this, args);
-      if (fault && resource) fault.created.push({ kind, resource });
+      if (fault && resource) fault.created.push({
+        kind, resource,
+        shaderType: kind === "Shader"
+          ? (args[0] === this.VERTEX_SHADER ? "vertex" : "fragment") : null,
+      });
       return resource;
     };
     WebGLRenderingContext.prototype["delete" + kind] = function (resource) {
       const fault = isGlass(this) && window.glassFault;
       if (fault && resource) fault.deleted.push({ kind, resource });
+      if (fault && !resource) fault.nullDeletes++;
       return destroy.call(this, resource);
+    };
+  }
+  for (const [method, name, mode, missing] of [
+    ["getAttribLocation", "aPosition", "attribute", -1],
+    ["getUniformLocation", "uTexture", "uniform", null],
+  ]) {
+    const original = WebGLRenderingContext.prototype[method];
+    WebGLRenderingContext.prototype[method] = function (...args) {
+      const fault = isGlass(this) && window.glassFault;
+      if (fault) fault.calls[method]++;
+      if (args[1] === name && hit(this, mode)) return missing;
+      return original.apply(this, args);
     };
   }
   const compile = WebGLRenderingContext.prototype.compileShader;
@@ -60,10 +80,15 @@ export function installGlassFaultProbe() {
     return {
       mode: fault.mode, hits: fault.hits, calls: { ...fault.calls },
       created: counts(fault.created), deleted: counts(fault.deleted),
+      createdShaders: fault.created.filter((r) => r.kind === "Shader").map((r) => r.shaderType),
       unreleased: fault.created.filter(
         (r) => !fault.deleted.some((d) => d.resource === r.resource),
       ).length,
       duplicateDeletes: fault.deleted.length - new Set(fault.deleted.map((r) => r.resource)).size,
+      foreignDeletes: fault.deleted.filter(
+        (d) => !fault.created.some((r) => r.resource === d.resource && r.kind === d.kind),
+      ).length,
+      nullDeletes: fault.nullDeletes,
       errors: [...fault.errors],
     };
   };
@@ -84,6 +109,22 @@ export async function checkGlassFaults({ evaluate, wait, live, contextEvent, res
     link: { Shader: 2, Program: 1, Buffer: 0, Texture: 0 },
     buffer: { Shader: 2, Program: 1, Buffer: 0, Texture: 1 },
     texture: { Shader: 2, Program: 1, Buffer: 1, Texture: 0 },
+    createVertexShader: { Shader: 1, Program: 0, Buffer: 0, Texture: 0 },
+    createFragmentShader: { Shader: 1, Program: 0, Buffer: 0, Texture: 0 },
+    createProgram: { Shader: 2, Program: 0, Buffer: 0, Texture: 0 },
+    attribute: { Shader: 2, Program: 1, Buffer: 1, Texture: 1 },
+    uniform: { Shader: 2, Program: 1, Buffer: 1, Texture: 1 },
+  };
+  const errors = {
+    shader: "Unable to compile the detail glass shader.",
+    link: "Unable to link the detail glass shader program.",
+    buffer: "Unable to initialize the detail glass shader inputs.",
+    texture: "Unable to initialize the detail glass shader inputs.",
+    createVertexShader: "Unable to create the detail glass shader.",
+    createFragmentShader: "Unable to create the detail glass shader.",
+    createProgram: "Unable to create the detail glass shader program.",
+    attribute: "Unable to initialize the detail glass shader inputs.",
+    uniform: "Unable to initialize the detail glass shader inputs.",
   };
   results.initializationFailures = {};
   for (const mode of Object.keys(expected)) {
@@ -106,18 +147,32 @@ export async function checkGlassFaults({ evaluate, wait, live, contextEvent, res
     // describes precisely the partially initialized restored generation.
     await evaluate(`window.glassFault = {
       mode: ${JSON.stringify(mode)}, hits: 0,
-      calls: { Shader: 0, Program: 0, Buffer: 0, Texture: 0 },
-      created: [], deleted: [], errors: []
+      calls: { Shader: 0, Program: 0, Buffer: 0, Texture: 0,
+        getAttribLocation: 0, getUniformLocation: 0 },
+      created: [], deleted: [], nullDeletes: 0, errors: []
     }`);
     await resetCounts();
     await contextEvent(true);
     await wait(300);
     const initial = await evaluate(`glassFaultSnapshot()`);
-    assert(initial.hits === 1 && initial.calls.Shader === 2 && initial.errors.length === 1,
+    const inputsReached = ["buffer", "texture", "attribute", "uniform"].includes(mode);
+    const shadersFailed = ["shader", "createVertexShader", "createFragmentShader"].includes(mode);
+    const expectedCalls = {
+      Shader: 2, Program: shadersFailed ? 0 : 1,
+      Buffer: inputsReached ? 1 : 0, Texture: inputsReached ? 1 : 0,
+      getAttribLocation: inputsReached ? 1 : 0, getUniformLocation: inputsReached ? 1 : 0,
+    };
+    const expectedShaders = mode === "createVertexShader" ? ["fragment"]
+      : mode === "createFragmentShader" ? ["vertex"] : ["vertex", "fragment"];
+    assert(initial.hits === 1
+      && JSON.stringify(initial.calls) === JSON.stringify(expectedCalls)
+      && JSON.stringify(initial.errors) === JSON.stringify([errors[mode]]),
       mode + " failure branch was not exercised exactly once", initial);
     assert(JSON.stringify(initial.created) === JSON.stringify(expected[mode])
       && JSON.stringify(initial.deleted) === JSON.stringify(expected[mode])
-      && !initial.unreleased && !initial.duplicateDeletes,
+      && JSON.stringify(initial.createdShaders) === JSON.stringify(expectedShaders)
+      && !initial.unreleased && !initial.duplicateDeletes
+      && !initial.foreignDeletes && !initial.nullDeletes,
     mode + " partial GPU cleanup failed", initial);
     const failedLive = await live();
     assert(!failedLive.gpu && !failedLive.raf && !failedLive.video && !failedLive.timers,
@@ -170,6 +225,8 @@ export async function checkGlassFaults({ evaluate, wait, live, contextEvent, res
     await evaluate(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))`);
     await wait(700);
     const closedLive = await closed(mode + " close");
+    assert(JSON.stringify(await evaluate(`glassFaultSnapshot()`)) === JSON.stringify(settled),
+      mode + " close deleted partial resources twice", settled);
     assert(!await evaluate(`!!document.querySelector('.detail-page-transition-backdrop')`),
       mode + " Escape did not close project", closedLive);
     await resetCounts();
@@ -178,6 +235,8 @@ export async function checkGlassFaults({ evaluate, wait, live, contextEvent, res
       window.dispatchEvent(new Event('resize')); document.dispatchEvent(new Event('visibilitychange'))`);
     await wait(300);
     await closed(mode + " late event");
+    assert(JSON.stringify(await evaluate(`glassFaultSnapshot()`)) === JSON.stringify(settled),
+      mode + " late event revived failed initialization", settled);
     assert(!Object.values(await evaluate(`({...glassCounts})`)).some(Boolean),
       mode + " closed renderer did work", settled);
     await evaluate(`window.glassFault = null; window.glassPixels = null;

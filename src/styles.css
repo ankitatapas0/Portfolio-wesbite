@@ -4,11 +4,17 @@
   --color-main-1: #030303;
   --color-main-2: #f2eae8;
   --description-text-color: rgb(from var(--color-main-2) r g b / 0.7);
+  --project-border-width: 1px;
+  --project-border-gradient: linear-gradient(
+    150deg,
+    rgb(from var(--color-main-2) r g b / 0.3),
+    rgb(from var(--color-main-2) r g b / 0.1)
+  );
   --font-body: "Instrument Sans", sans-serif;
   --font-display: "Figtree", sans-serif;
   --site-min-width: 320px;
-  --site-layout-height: max(100vh, 720px);
-  --site-layout-dynamic-height: max(100dvh, 720px);
+  --site-layout-height: max(100vh, 667px);
+  --site-layout-dynamic-height: max(100dvh, 667px);
   font-family: var(--font-body);
   color: oklch(18% 0.01 80);
   background: var(--color-main-2);
@@ -27,7 +33,7 @@
 
 html {
   min-width: var(--site-min-width);
-  min-height: 720px;
+  min-height: 667px;
   scroll-behavior: smooth;
 }
 
@@ -328,6 +334,13 @@ body :is(video, .expanded-media-image-frame):-webkit-full-screen {
   cursor: pointer;
 }
 
+a.media-slot[href],
+a.media-slot[href] * {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .media-slot.is-clickable:active {
   scale: 0.96;
 }
@@ -394,8 +407,48 @@ body :is(video, .expanded-media-image-frame):-webkit-full-screen {
   background: inherit;
 }
 
-.media-visual.has-hover-video {
+.media-visual.has-hover-video,
+.media-visual.has-external-link {
   position: relative;
+}
+
+.external-project-notice {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(from var(--color-main-1) r g b / 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--color-main-2);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+
+.media-slot.is-hovered .external-project-notice {
+  opacity: 1;
+}
+
+.media-slot.is-external-link-rest,
+.media-slot.is-external-link-rest .external-project-notice {
+  transition: none;
+}
+
+.media-slot:is(.slot-c, .slot-p).is-hovered .media-visual::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: var(--project-border-width) solid transparent;
+  border-image: var(--project-border-gradient) 1;
+  pointer-events: none;
 }
 
 .media-visual.has-hover-video > :is(.media-hover-rest, .media-hover-video) {
@@ -434,17 +487,13 @@ body :is(video, .expanded-media-image-frame):-webkit-full-screen {
 
 .project-tag {
   padding: 8px 12px;
-  border: 1px solid transparent;
+  border: var(--project-border-width) solid transparent;
   border-radius: 999px;
   box-shadow: 0 0 24px rgb(from var(--color-main-1) r g b / 0.8);
   color: var(--color-main-2);
   background:
     linear-gradient(var(--color-main-1), var(--color-main-1)) padding-box,
-    linear-gradient(
-      150deg,
-      rgb(from var(--color-main-2) r g b / 0.3),
-      rgb(from var(--color-main-2) r g b / 0.1)
-    ) border-box;
+    var(--project-border-gradient) border-box;
   font-family: var(--font-display);
   font-size: 12px;
   font-weight: 300;
@@ -620,7 +669,7 @@ body :is(video, .expanded-media-image-frame):-webkit-full-screen {
   height: auto;
 }
 
-.expanded-media-image-frame:not(.is-grouped).is-ready {
+.expanded-media-image-frame:not(.is-grouped):not(:fullscreen):not(.is-css-fullscreen).is-ready {
   width: 100%;
   height: auto;
 }
@@ -802,9 +851,8 @@ body :is(video, .expanded-media-image-frame):-webkit-full-screen {
   transition: background-color 120ms ease, opacity 160ms ease;
 }
 
-.expanded-media-image-frame:hover .expanded-image-fullscreen,
-.expanded-media-image-frame:focus-within .expanded-image-fullscreen,
-.expanded-media-image-frame.is-fullscreen-control-visible .expanded-image-fullscreen {
+.expanded-media-image-frame.is-mouse-hovered .expanded-image-fullscreen,
+.expanded-image-fullscreen:focus-visible {
   opacity: 1;
   pointer-events: auto;
 }
@@ -838,7 +886,25 @@ body :is(video, .expanded-media-image-frame):-webkit-full-screen {
   background: var(--color-main-1);
 }
 
-.expanded-media-image-frame:fullscreen img {
+.expanded-media-image-frame.is-css-fullscreen {
+  position: fixed;
+  z-index: 3000;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  max-width: none;
+  height: 100vh;
+  height: 100dvh;
+  max-height: none;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background: var(--color-main-1);
+  touch-action: manipulation;
+}
+
+.expanded-media-image-frame:fullscreen img,
+.expanded-media-image-frame.is-css-fullscreen img {
   width: 100%;
   max-width: none;
   height: 100%;
@@ -853,9 +919,20 @@ body :is(video, .expanded-media-image-frame):-webkit-full-screen {
 .expanded-media-image-frame:fullscreen .expanded-image-fullscreen {
   right: 12px;
   bottom: 12px;
+  opacity: 1;
+  pointer-events: auto;
 }
 
-.expanded-media-image-frame.is-fullscreen-entering:fullscreen img {
+.expanded-media-image-frame.is-css-fullscreen .expanded-image-fullscreen {
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 1;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.expanded-media-image-frame.is-fullscreen-entering:fullscreen img,
+.expanded-media-image-frame.is-fullscreen-entering.is-css-fullscreen img {
   animation: fullscreen-image-enter 400ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 

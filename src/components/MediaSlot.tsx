@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
-import { createPortal } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
+import { navigatePortfolio, portfolioRouteChangeEvent } from "../portfolioRouting";
 import { extraSmallViewportQuery } from "../breakpoints";
 import { DetailPageTransition } from "./DetailPageTransition";
 import { useVideoControlsVisibility } from "./useVideoControlsVisibility";
+import { isVideoFullscreen, observeVideoFullscreen } from "./videoFullscreen";
 import { TagComponent } from "./tag_component";
 import { imageMetadata, videoMetadata } from "../video-metadata.generated";
 import { NavigationSpecificationsTable, type NavigationSpecification } from "./NavigationSpecificationsTable";
@@ -35,6 +37,7 @@ function saveMediaVolumePreferences(preferences: MediaVolumePreferences) {
 
 export type MediaSlotData = {
   detailSlug?: string;
+  externalHref?: string;
   id: string;
   ratio: "1:1" | "16:9" | "2:3";
   layer: 1 | 2 | 3;
@@ -121,8 +124,9 @@ function ExpandedImage({
   );
   const [isFullscreenEntering, setIsFullscreenEntering] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isCssFullscreen, setIsCssFullscreen] = useState(false);
   const [imageSizes, setImageSizes] = useState("100vw");
-  const [isTouchControlVisible, setIsTouchControlVisible] = useState(false);
+  const [isMouseHoverActive, setIsMouseHoverActive] = useState(false);
 
   useLayoutEffect(() => {
     if (!dimensions?.srcSet || !frameRef.current) return;
@@ -132,7 +136,7 @@ function ExpandedImage({
     });
     observer.observe(frameRef.current);
     return () => observer.disconnect();
-  }, [dimensions?.srcSet]);
+  }, [dimensions?.srcSet, isCssFullscreen]);
   const style: ExpandedImageStyle | undefined = aspectRatio
     ? {
         aspectRatio,
@@ -143,7 +147,9 @@ function ExpandedImage({
 
   useEffect(() => {
     const updateFullscreenState = () => {
-      const isCurrentImageFullscreen = document.fullscreenElement === frameRef.current;
+      const isCurrentImageFullscreen = document.fullscreenElement === frameRef.current
+        || (document as Document & { webkitFullscreenElement?: Element | null })
+          .webkitFullscreenElement === frameRef.current;
       setIsFullscreen(isCurrentImageFullscreen);
 
       if (fullscreenAnimationTimeoutRef.current !== undefined) {
@@ -165,41 +171,99 @@ function ExpandedImage({
     };
 
     document.addEventListener("fullscreenchange", updateFullscreenState);
+    document.addEventListener("webkitfullscreenchange", updateFullscreenState);
     return () => {
       document.removeEventListener("fullscreenchange", updateFullscreenState);
+      document.removeEventListener("webkitfullscreenchange", updateFullscreenState);
       if (fullscreenAnimationTimeoutRef.current !== undefined) {
         clearTimeout(fullscreenAnimationTimeoutRef.current);
       }
     };
   }, []);
 
-  const toggleFullscreenImage = () => {
+  useEffect(() => {
+    if (!isCssFullscreen) return;
+    frameRef.current?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Tab") {
+        event.preventDefault();
+        frameRef.current?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
+        return;
+      }
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      setIsCssFullscreen(false);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      frameRef.current?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
+    };
+  }, [isCssFullscreen]);
+
+  const toggleFullscreenImage = async () => {
     const frame = frameRef.current;
-    if (!frame?.requestFullscreen || !document.exitFullscreen) {
-      console.error(`Fullscreen images are not supported for ${source}.`);
+    if (!frame) return;
+
+    if (isCssFullscreen) {
+      setIsCssFullscreen(false);
       return;
     }
 
-    if (document.fullscreenElement === frame) {
-      document.exitFullscreen().catch((error: unknown) => {
+    const fullscreenDocument = document as Document & {
+      webkitExitFullscreen?: () => void | Promise<void>;
+      webkitFullscreenElement?: Element | null;
+    };
+    const isNativeFullscreen = document.fullscreenElement === frame
+      || fullscreenDocument.webkitFullscreenElement === frame;
+    const exitFullscreen = document.exitFullscreen?.bind(document)
+      ?? fullscreenDocument.webkitExitFullscreen?.bind(document);
+
+    if (isNativeFullscreen && exitFullscreen) {
+      try {
+        await exitFullscreen();
+      } catch (error) {
         console.error(`Unable to exit image fullscreen: ${source}`, error);
-      });
-    } else {
-      frame.requestFullscreen().catch((error: unknown) => {
-        console.error(`Unable to show image fullscreen: ${source}`, error);
-      });
+      }
+      return;
     }
-    setIsTouchControlVisible(false);
+
+    const fullscreenFrame = frame as HTMLDivElement & {
+      webkitRequestFullscreen?: () => void | Promise<void>;
+    };
+    const requestFullscreen = fullscreenFrame.requestFullscreen?.bind(frame)
+      ?? fullscreenFrame.webkitRequestFullscreen?.bind(frame);
+    if (!requestFullscreen || !exitFullscreen) {
+      setIsCssFullscreen(true);
+      return;
+    }
+
+    try {
+      await requestFullscreen();
+    } catch (error) {
+      console.warn(`Native image fullscreen is unavailable; using viewport fullscreen: ${source}`, error);
+      setIsCssFullscreen(true);
+    }
   };
 
   const imageFrame = (
     <div
       ref={frameRef}
-      className={`expanded-media-image-frame${bordered ? " is-bordered" : ""}${grouped ? " is-grouped" : ""}${aspectRatio ? " is-ready" : ""}${isTouchControlVisible ? " is-fullscreen-control-visible" : ""}${isFullscreenEntering ? " is-fullscreen-entering" : ""}${transitionClass}`}
+      className={`expanded-media-image-frame${bordered ? " is-bordered" : ""}${grouped ? " is-grouped" : ""}${aspectRatio ? " is-ready" : ""}${isMouseHoverActive ? " is-mouse-hovered" : ""}${isFullscreenEntering ? " is-fullscreen-entering" : ""}${isCssFullscreen ? " is-css-fullscreen" : ""}${transitionClass}`}
       data-detail-page-content
       style={style}
+      role={isCssFullscreen ? "dialog" : undefined}
+      aria-modal={isCssFullscreen ? true : undefined}
+      aria-label={isCssFullscreen ? alt : undefined}
+      onPointerEnter={(event) => {
+        if (event.pointerType === "mouse" && window.matchMedia("(any-hover: hover)").matches) {
+          setIsMouseHoverActive(true);
+        }
+      }}
+      onPointerLeave={() => setIsMouseHoverActive(false)}
       onPointerDown={(event) => {
-        if (event.pointerType === "touch") setIsTouchControlVisible(true);
+        if (event.pointerType !== "mouse") setIsMouseHoverActive(false);
       }}
     >
       <img
@@ -224,13 +288,13 @@ function ExpandedImage({
       <button
         className="expanded-image-fullscreen"
         type="button"
-        aria-label={`${isFullscreen ? "Exit fullscreen for" : "View"} ${alt}${isFullscreen ? "" : " fullscreen"}`}
-        onClick={toggleFullscreenImage}
+        aria-label={`${isFullscreen || isCssFullscreen ? "Exit fullscreen for" : "View"} ${alt}${isFullscreen || isCssFullscreen ? "" : " fullscreen"}`}
+        onClick={() => void toggleFullscreenImage()}
       >
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path
             d={
-              isFullscreen
+              isFullscreen || isCssFullscreen
                 ? "M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"
                 : "M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"
             }
@@ -240,6 +304,10 @@ function ExpandedImage({
     </div>
   );
 
+  const fullscreenFrame = isCssFullscreen
+    ? createPortal(imageFrame, document.body)
+    : imageFrame;
+
   return caption || specifications?.length ? (
     <div className="expanded-media-captioned-image">
       {caption && !specifications?.length && (
@@ -248,9 +316,9 @@ function ExpandedImage({
       {specifications?.length ? (
         <NavigationSpecificationsTable columns={specifications} label={caption ?? alt} />
       ) : null}
-      {imageFrame}
+      {fullscreenFrame}
     </div>
-  ) : imageFrame;
+  ) : fullscreenFrame;
 }
 
 type ExpandedVideoProps = {
@@ -364,7 +432,9 @@ function ExpandedVideo({
 
     const scrollRoot = video.closest<HTMLElement>(".detail-page-transition-backdrop");
     let visibleRatio: number | null = null;
+    let fullscreenActive = isVideoFullscreen(video);
     const pauseIfMostlyOutsideViewport = (intersectionRatio: number) => {
+      if (fullscreenActive || isVideoFullscreen(video)) return;
       if (intersectionRatio > 0.3 || video.paused) return;
 
       stopAudioFade();
@@ -377,6 +447,14 @@ function ExpandedVideo({
       },
       { root: scrollRoot, threshold: [0, 0.3] },
     );
+    const stopObservingFullscreen = observeVideoFullscreen(video, (fullscreen) => {
+      fullscreenActive = fullscreen;
+      // Fullscreen changes the coordinate space. Discard stale scroll-root
+      // visibility and remeasure on exit instead of pausing a visible player.
+      visibleRatio = null;
+      observer.disconnect();
+      observer.observe(video);
+    });
     const handlePlay = () => {
       if (shouldRestartOnFirstPlayRef.current) {
         shouldRestartOnFirstPlayRef.current = false;
@@ -412,6 +490,7 @@ function ExpandedVideo({
     }
 
     return () => {
+      stopObservingFullscreen();
       observer.disconnect();
       video.removeEventListener("play", handlePlay);
       video.removeEventListener("pause", handlePause);
@@ -444,6 +523,7 @@ function ExpandedVideo({
         style={dimensions ? { aspectRatio: `${dimensions.width} / ${dimensions.height}` } : undefined}
         loop
         playsInline
+        disablePictureInPicture
         preload={sourceReady && nearViewport ? "auto" : "none"}
         {...controlsVisibility}
         controlsList="nodownload"
@@ -497,11 +577,14 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
   const tagOverlayRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hoverIntentTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const externalHoverDismissedRef = useRef(false);
+  const pointerFocusRef = useRef(false);
   const [isExpanded, setIsExpanded] = useState(
     () => Boolean(detailHash && window.location.hash === detailHash),
   );
   const [disableExitMotion, setDisableExitMotion] = useState(false);
   const [isHoverActive, setIsHoverActive] = useState(false);
+  const [isExternalLinkRest, setIsExternalLinkRest] = useState(false);
   const [hoverSourceReady, setHoverSourceReady] = useState(false);
   const [isHoverVideoReady, setIsHoverVideoReady] = useState(false);
   const [tagPosition, setTagPosition] = useState<{ left: number; top: number; width: number } | null>(null);
@@ -663,6 +746,34 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
     hoverIntentTimeoutRef.current = undefined;
   };
 
+  const clearHoverInteraction = useCallback(() => {
+    if (hoverIntentTimeoutRef.current !== undefined) {
+      clearTimeout(hoverIntentTimeoutRef.current);
+      hoverIntentTimeoutRef.current = undefined;
+    }
+    setIsHoverActive(false);
+    setIsHoverVideoReady(false);
+    const video = videoRef.current;
+    if (video) {
+      video.pause();
+      video.currentTime = 0;
+    }
+  }, []);
+
+  useEffect(() => {
+    const clearWhenHidden = () => {
+      if (document.hidden) clearHoverInteraction();
+    };
+    window.addEventListener("blur", clearHoverInteraction);
+    window.addEventListener("pagehide", clearHoverInteraction);
+    document.addEventListener("visibilitychange", clearWhenHidden);
+    return () => {
+      window.removeEventListener("blur", clearHoverInteraction);
+      window.removeEventListener("pagehide", clearHoverInteraction);
+      document.removeEventListener("visibilitychange", clearWhenHidden);
+    };
+  }, [clearHoverInteraction]);
+
   const prepareHoverLayout = () => {
     const article = articleRef.current;
     if (!article || article.classList.contains("is-hovered")) return;
@@ -692,16 +803,29 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
   };
 
   const activateHover = () => {
+    if (isExpanded || document.body.classList.contains("has-detail-page-open")) return;
+    if (slot.externalHref && externalHoverDismissedRef.current) return;
+    setIsExternalLinkRest(false);
     prepareHoverLayout();
     setHoverSourceReady(true);
     setIsHoverActive(true);
   };
 
-  const canExpand = expandedMediaItems.length > 0;
+  const canExpand = !slot.externalHref && expandedMediaItems.length > 0;
+  const SlotElement = slot.externalHref ? "a" : "article";
+  const isClickable = Boolean(slot.externalHref) || canExpand;
   const hasHoverVideoCrossfade = Boolean(slot.imageSrc && slot.hoverVideoSrc && !slot.videoSrc);
   const activeVideoSrc = slot.videoSrc ?? slot.hoverVideoSrc;
   const restLabel = slot.restLabel ?? "Portfolio media";
   const expandedLabel = slot.expandedLabel ?? "Expanded portfolio media";
+  const openExternalLink = () => {
+    externalHoverDismissedRef.current = true;
+    // Commit the rest state before the browser opens the anchor's new tab.
+    flushSync(() => {
+      setIsExternalLinkRest(true);
+      clearHoverInteraction();
+    });
+  };
 
   useEffect(() => {
     if (isHoverActive && !isExpanded && (slot.videoSrc || slot.hoverVideoSrc)) {
@@ -721,13 +845,14 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
 
   useEffect(() => {
     if (isExpanded) {
+      clearHoverInteraction();
       setHoverSourceReady(false);
       return;
     }
     if (!hoverSourceReady || isHoverActive) return;
     const release = setTimeout(() => setHoverSourceReady(false), 15000);
     return () => clearTimeout(release);
-  }, [hoverSourceReady, isHoverActive, isExpanded]);
+  }, [hoverSourceReady, isHoverActive, isExpanded, clearHoverInteraction]);
 
   useEffect(() => {
     const syncExpandedStateWithRoute = () => {
@@ -741,10 +866,17 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
     };
 
     window.addEventListener("hashchange", syncExpandedStateWithRoute);
-    return () => window.removeEventListener("hashchange", syncExpandedStateWithRoute);
+    window.addEventListener("popstate", syncExpandedStateWithRoute);
+    window.addEventListener(portfolioRouteChangeEvent, syncExpandedStateWithRoute);
+    return () => {
+      window.removeEventListener("hashchange", syncExpandedStateWithRoute);
+      window.removeEventListener("popstate", syncExpandedStateWithRoute);
+      window.removeEventListener(portfolioRouteChangeEvent, syncExpandedStateWithRoute);
+    };
   }, [canExpand, detailHash]);
 
   const openExpandedMedia = () => {
+    clearHoverInteraction();
     if (!detailHash) {
       console.error(`Missing detail route for expandable slot ${slot.id}.`);
       return;
@@ -752,11 +884,9 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
 
     setDisableExitMotion(false);
     if (window.location.hash !== detailHash) {
-      window.history.pushState(
-        { ...window.history.state, portfolioDetail: true },
-        "",
-        detailHash,
-      );
+      navigatePortfolio(detailHash, {
+        state: { ...window.history.state, portfolioDetail: true },
+      });
     }
     setIsExpanded(true);
   };
@@ -771,17 +901,23 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
     }
 
     if (window.location.hash !== "#/desktop") {
-      window.history.replaceState(null, "", "#/desktop");
+      navigatePortfolio("#/desktop", { replace: true });
     }
     setIsExpanded(false);
   };
 
   return (
     <>
-      <article
-        ref={articleRef}
-        className={`media-slot slot-${slot.id} layer-${slot.layer}${canExpand ? " is-clickable" : ""}${isHoverActive ? " is-hovered" : ""}${isHoverVideoReady ? " is-hover-video-ready" : ""}`}
-        onMouseEnter={() => {
+      <SlotElement
+        ref={(element) => { articleRef.current = element; }}
+        href={slot.externalHref}
+        target={slot.externalHref ? "_blank" : undefined}
+        rel={slot.externalHref ? "noopener noreferrer" : undefined}
+        draggable={slot.externalHref ? false : undefined}
+        onContextMenu={slot.externalHref ? (event) => event.preventDefault() : undefined}
+        className={`media-slot slot-${slot.id} layer-${slot.layer}${isClickable ? " is-clickable" : ""}${isHoverActive ? " is-hovered" : ""}${isExternalLinkRest ? " is-external-link-rest" : ""}${isHoverVideoReady ? " is-hover-video-ready" : ""}`}
+        onPointerEnter={(event) => {
+          if (event.pointerType !== "mouse" || !window.matchMedia("(any-hover: hover)").matches) return;
           setHoverSourceReady(true);
           cancelHoverIntent();
           hoverIntentTimeoutRef.current = setTimeout(() => {
@@ -789,21 +925,40 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
             activateHover();
           }, 400);
         }}
-        onMouseLeave={() => {
-          cancelHoverIntent();
-          setIsHoverActive(false);
-          if (slot.videoSrc || slot.hoverVideoSrc) resetVideo();
+        onPointerMove={(event) => {
+          if (
+            event.pointerType === "mouse"
+            && window.matchMedia("(any-hover: hover)").matches
+            && slot.externalHref
+            && externalHoverDismissedRef.current
+            && (event.movementX !== 0 || event.movementY !== 0)
+          ) {
+            // Restored focus/hover events must not undo dismissal. Only a
+            // fresh pointer movement or a new keyboard focus may reactivate it.
+            externalHoverDismissedRef.current = false;
+            activateHover();
+          }
         }}
-        onFocus={() => {
+        onPointerLeave={() => {
+          clearHoverInteraction();
+        }}
+        onPointerDown={(event) => {
+          pointerFocusRef.current = true;
+          if (event.pointerType !== "mouse") clearHoverInteraction();
+        }}
+        onFocus={(event) => {
+          if (pointerFocusRef.current || !event.currentTarget.matches(":focus-visible")) return;
+          if (event.relatedTarget) externalHoverDismissedRef.current = false;
           cancelHoverIntent();
           activateHover();
         }}
         onBlur={() => {
+          pointerFocusRef.current = false;
           cancelHoverIntent();
           setIsHoverActive(false);
           if (slot.videoSrc || slot.hoverVideoSrc) resetVideo();
         }}
-        onClick={canExpand ? openExpandedMedia : undefined}
+        onClick={slot.externalHref ? openExternalLink : canExpand ? openExpandedMedia : undefined}
         onKeyDown={
           canExpand
             ? (event) => {
@@ -815,10 +970,10 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
             : undefined
         }
         role={canExpand ? "button" : undefined}
-        tabIndex={canExpand ? 0 : undefined}
-        aria-label={canExpand ? `Open ${expandedLabel}` : undefined}
+        tabIndex={isClickable ? 0 : undefined}
+        aria-label={slot.externalHref ? `View ${slot.projectLabel} on Instagram (opens in a new tab)` : canExpand ? `Open ${expandedLabel}` : undefined}
       >
-        <div className={`media-visual${hasHoverVideoCrossfade ? " has-hover-video" : ""}`}>
+        <div className={`media-visual${hasHoverVideoCrossfade ? " has-hover-video" : ""}${slot.externalHref ? " has-external-link" : ""}`}>
           {hasHoverVideoCrossfade ? (
             <>
               <img
@@ -833,6 +988,7 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
                 muted
                 loop
                 playsInline
+                disablePictureInPicture
                 preload={hoverSourceReady && !isExpanded ? (isHoverActive ? "auto" : "metadata") : "none"}
                 aria-hidden="true"
                 onCanPlay={() => setIsHoverVideoReady(isHoverActive && !isExpanded)}
@@ -850,6 +1006,7 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
               muted
               loop
               playsInline
+              disablePictureInPicture
               preload={hoverSourceReady && !isExpanded ? (isHoverActive ? "auto" : "metadata") : "none"}
               aria-label={restLabel}
             />
@@ -857,6 +1014,7 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
             <img
               src={isHoverActive && slot.hoverImageSrc ? slot.hoverImageSrc : slot.imageSrc}
               alt={restLabel}
+              draggable={slot.externalHref ? false : undefined}
             />
           ) : (
             <div className="slot-label">
@@ -864,8 +1022,13 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
               <small>{slot.ratio}</small>
             </div>
           )}
+          {slot.externalHref && (
+            <div className="external-project-notice" aria-hidden={!isHoverActive}>
+              This project will open Instagram
+            </div>
+          )}
         </div>
-      </article>
+      </SlotElement>
       {isHoverActive &&
         tagPosition &&
         createPortal(

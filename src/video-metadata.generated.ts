@@ -11,8 +11,23 @@ import gettyRestImage from "../delivery-media/Desktop images/4_GettyUnshuttered_
 import operaVideo from "../delivery-media/Desktop images/5_Opera_1x1.mp4";
 import operaVideoPoster from "../delivery-media/Desktop images/5_Opera_1x1.mp4.poster.webp";
 import operaRestImage from "../delivery-media/Desktop images/5_Opera_1x1_image.jpg.webp";
+import weekndImage from "../delivery-media/Desktop images/MM_weekend_noLogo.png.webp";
 import xboxPcRedesignVideo from "../delivery-media/Desktop images/Xbox_PC_Redesign_16x9.mp4";
 import xboxPcRedesignVideoPoster from "../delivery-media/Desktop images/Xbox_PC_Redesign_16x9.mp4.poster.webp";
+import xboxCopilotVideo from "../delivery-media/Desktop images/Xbox_copilot_16x9.mp4";
+import xboxCopilotVideoPoster from "../delivery-media/Desktop images/Xbox_copilot_16x9.mp4.poster.webp";
+import xboxCopilotDetailVideo from "../delivery-media/Xbox Copilot/Main copilot video.mp4";
+import xboxCopilotDetailVideoPoster from "../delivery-media/Xbox Copilot/Main copilot video.mp4.poster.webp";
+import xboxCopilotImage1 from "../delivery-media/Xbox Copilot/Image1_00000.png.webp";
+import xboxCopilotImage2 from "../delivery-media/Xbox Copilot/Image2_00000.png.webp";
+import xboxCopilotImage3 from "../delivery-media/Xbox Copilot/Image3_00000.png.webp";
+import xboxCopilotImage4 from "../delivery-media/Xbox Copilot/Image4_00000.png.webp";
+import xboxCopilotImage5 from "../delivery-media/Xbox Copilot/Image5_00000.png.webp";
+import xboxCopilotImage6 from "../delivery-media/Xbox Copilot/Image6_00000.png.webp";
+import xboxCopilotImage7 from "../delivery-media/Xbox Copilot/Image7_00000.png.webp";
+import xboxCopilotImage8 from "../delivery-media/Xbox Copilot/Image8_00000.png.webp";
+import xboxCopilotImage9 from "../delivery-media/Xbox Copilot/Image9_00000.png.webp";
+import xboxCopilotImage10 from "../delivery-media/Xbox Copilot/Image10_00000.png.webp";
 import navigationIntroVideo from "../delivery-media/Desktop images/Navigation_intro.mp4";
 import navigationIntroVideoPoster from "../delivery-media/Desktop images/Navigation_intro.mp4.poster.webp";
 import navigationIntroDetailVideo from "../delivery-media/Single videos/Navigation_intro.mp4";
@@ -98,6 +113,8 @@ export const videoMetadata: Record<string, { poster: string; width: number; heig
   [gettyVideo]: { poster: gettyVideoPoster, width: 640, height: 960 },
   [operaVideo]: { poster: operaVideoPoster, width: 960, height: 960 },
   [xboxPcRedesignVideo]: { poster: xboxPcRedesignVideoPoster, width: 960, height: 540 },
+  [xboxCopilotVideo]: { poster: xboxCopilotVideoPoster, width: 960, height: 540 },
+  [xboxCopilotDetailVideo]: { poster: xboxCopilotDetailVideoPoster, width: 1920, height: 1080 },
   [navigationIntroVideo]: { poster: navigationIntroVideoPoster, width: 1920, height: 1080 },
   [navigationIntroDetailVideo]: { poster: navigationIntroDetailVideoPoster, width: 1920, height: 1080 },
   [operaDetailVideo]: { poster: operaDetailVideoPoster, width: 1920, height: 1080 },
@@ -127,6 +144,17 @@ export const videoMetadata: Record<string, { poster: string; width: number; heig
 export const imageMetadata: Record<string, { width: number; height: number; srcSet?: string }> = {
   [gettyRestImage]: { width: 848, height: 1264 },
   [operaRestImage]: { width: 1080, height: 1080 },
+  [weekndImage]: { width: 1254, height: 1254 },
+  [xboxCopilotImage1]: { width: 1920, height: 1080 },
+  [xboxCopilotImage2]: { width: 1920, height: 1080 },
+  [xboxCopilotImage3]: { width: 1920, height: 1080 },
+  [xboxCopilotImage4]: { width: 1920, height: 1080 },
+  [xboxCopilotImage5]: { width: 1920, height: 1080 },
+  [xboxCopilotImage6]: { width: 1920, height: 1080 },
+  [xboxCopilotImage7]: { width: 1920, height: 1080 },
+  [xboxCopilotImage8]: { width: 1920, height: 1080 },
+  [xboxCopilotImage9]: { width: 1920, height: 1080 },
+  [xboxCopilotImage10]: { width: 1920, height: 1080 },
   [desktopNavigationImage]: { width: 1827, height: 1041, srcSet: [desktopNavigationImage_640 + " 640w", desktopNavigationImage_1280 + " 1280w", desktopNavigationImage + " 1827w"].join(", ") },
   [xboxModeLowDensityImage]: { width: 3840, height: 2162, srcSet: [xboxModeLowDensityImage_640 + " 640w", xboxModeLowDensityImage_1280 + " 1280w", xboxModeLowDensityImage_1920 + " 1920w", xboxModeLowDensityImage_2560 + " 2560w", xboxModeLowDensityImage + " 3840w"].join(", ") },
   [desktopModeHighDensityImage]: { width: 3840, height: 2160, srcSet: [desktopModeHighDensityImage_640 + " 640w", desktopModeHighDensityImage_1280 + " 1280w", desktopModeHighDensityImage_1920 + " 1920w", desktopModeHighDensityImage_2560 + " 2560w", desktopModeHighDensityImage + " 3840w"].join(", ") },
