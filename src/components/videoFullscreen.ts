@@ -1,11 +1,13 @@
 type FullscreenVideo = HTMLVideoElement & { webkitDisplayingFullscreen?: boolean };
 type FullscreenDocument = Document & { webkitFullscreenElement?: Element | null };
+export const videoFullscreenChangeEvent = "portfolio-video-fullscreen-change";
 
 export function isVideoFullscreen(video: HTMLVideoElement): boolean {
   const document = video.ownerDocument as FullscreenDocument;
   const element = document.fullscreenElement ?? document.webkitFullscreenElement;
   return Boolean(
     (video as FullscreenVideo).webkitDisplayingFullscreen
+    || video.closest(".expanded-media-video-frame.is-css-fullscreen")
     || element === video
     || element?.contains(video),
   );
@@ -42,12 +44,14 @@ export function observeVideoFullscreen(
   };
   document.addEventListener("fullscreenchange", update);
   document.addEventListener("webkitfullscreenchange", update);
+  document.addEventListener(videoFullscreenChangeEvent, update);
   video.addEventListener("webkitbeginfullscreen", beginNativeFullscreen);
   video.addEventListener("webkitendfullscreen", endNativeFullscreen);
   update();
   return () => {
     document.removeEventListener("fullscreenchange", update);
     document.removeEventListener("webkitfullscreenchange", update);
+    document.removeEventListener(videoFullscreenChangeEvent, update);
     video.removeEventListener("webkitbeginfullscreen", beginNativeFullscreen);
     video.removeEventListener("webkitendfullscreen", endNativeFullscreen);
   };

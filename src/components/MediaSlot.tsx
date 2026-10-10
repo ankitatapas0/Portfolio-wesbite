@@ -3,13 +3,18 @@ import { createPortal, flushSync } from "react-dom";
 import { navigatePortfolio, portfolioRouteChangeEvent } from "../portfolioRouting";
 import { extraSmallViewportQuery } from "../breakpoints";
 import { DetailPageTransition } from "./DetailPageTransition";
+import { CustomVideoControls } from "./CustomVideoControls";
 import { useVideoControlsVisibility } from "./useVideoControlsVisibility";
 import { useDetailVideoLoading } from "./useDetailVideoLoading";
-import { isVideoFullscreen, observeVideoFullscreen } from "./videoFullscreen";
+import { isVideoFullscreen, observeVideoFullscreen, videoFullscreenChangeEvent } from "./videoFullscreen";
 import { TagComponent } from "./tag_component";
 import { imageMetadata, videoMetadata } from "../video-metadata.generated";
 import { NavigationSpecificationsTable, type NavigationSpecification } from "./NavigationSpecificationsTable";
 import { DetailDescription } from "./DetailDescription";
+import imageExitIcon from "../assets/player-icons/fullscreen-exit.svg";
+import { getVideoVolume, setVideoVolume } from "./videoVolume";
+import { useFullscreenSwipeDismiss } from "./useFullscreenSwipeDismiss";
+import { useDetailCursorHint } from "./useDetailCursorHint";
 
 const mediaVolumeChangeEventKey = "portfolio-media-volume-change";
 const audioFadeStartVolume = 0.01;
@@ -135,7 +140,6 @@ function ExpandedImage({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isCssFullscreen, setIsCssFullscreen] = useState(false);
   const [imageSizes, setImageSizes] = useState("100vw");
-  const [isMouseHoverActive, setIsMouseHoverActive] = useState(false);
 
   useLayoutEffect(() => {
     if (!dimensions?.srcSet || !frameRef.current) return;
@@ -175,6 +179,7 @@ function ExpandedImage({
       } else if (!isCurrentImageFullscreen && wasFullscreenRef.current) {
         setIsFullscreenEntering(false);
         fullscreenAnimationTimeoutRef.current = undefined;
+        requestAnimationFrame(() => imageRef.current?.focus({ preventScroll: true }));
       }
       wasFullscreenRef.current = isCurrentImageFullscreen;
     };
@@ -207,7 +212,7 @@ function ExpandedImage({
     document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
-      frameRef.current?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
+      requestAnimationFrame(() => imageRef.current?.focus({ preventScroll: true }));
     };
   }, [isCssFullscreen]);
 
@@ -256,31 +261,42 @@ function ExpandedImage({
     }
   };
 
+  const imageSwipe = useFullscreenSwipeDismiss(frameRef, isFullscreen || isCssFullscreen,
+    () => { void toggleFullscreenImage(); });
+  const imageCursor = useDetailCursorHint(!isFullscreen && !isCssFullscreen && !isFullscreenEntering, "VIEW FULLSCREEN");
+
   const imageFrame = (
     <div
       ref={frameRef}
-      className={`expanded-media-image-frame${bordered ? " is-bordered" : ""}${grouped ? " is-grouped" : ""}${aspectRatio ? " is-ready" : ""}${isMouseHoverActive ? " is-mouse-hovered" : ""}${isFullscreenEntering ? " is-fullscreen-entering" : ""}${isCssFullscreen ? " is-css-fullscreen" : ""}${transitionClass}`}
+      className={`expanded-media-image-frame${bordered ? " is-bordered" : ""}${grouped ? " is-grouped" : ""}${aspectRatio ? " is-ready" : ""}${isFullscreenEntering ? " is-fullscreen-entering" : ""}${isCssFullscreen ? " is-css-fullscreen" : ""}${transitionClass}`}
       data-detail-page-content
       style={style}
       role={isCssFullscreen ? "dialog" : undefined}
       aria-modal={isCssFullscreen ? true : undefined}
       aria-label={isCssFullscreen ? alt : undefined}
-      onPointerEnter={(event) => {
-        if (event.pointerType === "mouse" && window.matchMedia("(any-hover: hover)").matches) {
-          setIsMouseHoverActive(true);
-        }
-      }}
-      onPointerLeave={() => setIsMouseHoverActive(false)}
-      onPointerDown={(event) => {
-        if (event.pointerType !== "mouse") setIsMouseHoverActive(false);
-      }}
+      {...imageSwipe}
+      onClick={(event) => event.stopPropagation()}
     >
       <img
         ref={imageRef}
+        {...imageCursor.pointerEvents}
         src={source}
         srcSet={dimensions?.srcSet}
         sizes={dimensions?.srcSet ? imageSizes : undefined}
         alt={alt}
+        role={isFullscreen || isCssFullscreen ? undefined : "button"}
+        tabIndex={isFullscreen || isCssFullscreen ? -1 : 0}
+        aria-label={isFullscreen || isCssFullscreen ? undefined : `View ${alt} fullscreen`}
+        onClick={() => {
+          if (!isFullscreen && !isCssFullscreen) void toggleFullscreenImage();
+        }}
+        onKeyDown={(event) => {
+          if ((event.key === "Enter" || event.key === " ") && !isFullscreen && !isCssFullscreen) {
+            event.preventDefault();
+            event.stopPropagation();
+            void toggleFullscreenImage();
+          }
+        }}
         width={dimensions?.width}
         height={dimensions?.height}
         loading="lazy"
@@ -294,22 +310,16 @@ function ExpandedImage({
         }}
         onError={onError}
       />
-      <button
+      {imageCursor.cursor}
+      {(isFullscreen || isCssFullscreen) && <button
         className="expanded-image-fullscreen"
         type="button"
-        aria-label={`${isFullscreen || isCssFullscreen ? "Exit fullscreen for" : "View"} ${alt}${isFullscreen || isCssFullscreen ? "" : " fullscreen"}`}
+        aria-label={`Exit fullscreen for ${alt}`}
         onClick={() => void toggleFullscreenImage()}
       >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path
-            d={
-              isFullscreen || isCssFullscreen
-                ? "M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"
-                : "M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"
-            }
-          />
-        </svg>
-      </button>
+        <span className="cvc-icon" aria-hidden="true"
+          style={{ maskImage: `url("${imageExitIcon}")`, WebkitMaskImage: `url("${imageExitIcon}")` }} />
+      </button>}
     </div>
   );
 
@@ -320,7 +330,7 @@ function ExpandedImage({
   return caption || specifications?.length ? (
     <div className="expanded-media-captioned-image">
       {caption && !specifications?.length && (
-        <div className="expanded-media-image-caption nav-tabs-type-ramp">{caption}</div>
+        <div className="expanded-media-image-caption nav-tabs-type-ramp" data-detail-page-content>{caption}</div>
       )}
       {specifications?.length ? (
         <NavigationSpecificationsTable columns={specifications} label={caption ?? alt} />
@@ -353,7 +363,16 @@ function ExpandedVideo({
 }: ExpandedVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const dimensions = videoMetadata[source];
-  const controlsVisibility = useVideoControlsVisibility(videoRef);
+  const {
+    controls: controlsVisible,
+    showToolbarWhilePaused,
+    onPlaybackStarted,
+    onPlaybackPaused,
+    ...frameVisibility
+  } = useVideoControlsVisibility(videoRef);
+  const frameRef = useRef<HTMLDivElement>(null);
+  const [isCssFullscreen, setIsCssFullscreen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const loading = useDetailVideoLoading(videoRef, autoPlay,
     prefetchInitialRange && !autoPlay ? source : undefined);
   const { reportPlayError } = loading;
@@ -368,9 +387,9 @@ function ExpandedVideo({
     const preferences = loadMediaVolumePreferences();
     hasUserAdjustedVolumeRef.current = false;
     isApplyingSharedVolumeRef.current = true;
-    video.volume = autoPlay
+    setVideoVolume(video, autoPlay
       ? Math.min(audioFadeStartVolume, preferences.volume)
-      : preferences.volume;
+      : preferences.volume);
     video.muted = preferences.muted;
   }, [autoPlay]);
 
@@ -381,7 +400,7 @@ function ExpandedVideo({
     const preferences = loadMediaVolumePreferences();
     isApplyingSharedVolumeRef.current = true;
     const fadeStartVolume = Math.min(audioFadeStartVolume, preferences.volume);
-    video.volume = autoPlay ? fadeStartVolume : preferences.volume;
+    setVideoVolume(video, autoPlay ? fadeStartVolume : preferences.volume);
     video.muted = preferences.muted;
 
     const stopAudioFade = () => {
@@ -402,7 +421,7 @@ function ExpandedVideo({
           const fadeStartedAt = performance.now();
           const fadeIn = (now: number) => {
             const fadeProgress = Math.min(Math.max((now - fadeStartedAt) / 3000, 0), 1);
-            video.volume = fadeStartVolume + (preferences.volume - fadeStartVolume) * fadeProgress;
+            setVideoVolume(video, fadeStartVolume + (preferences.volume - fadeStartVolume) * fadeProgress);
             if (fadeProgress < 1) {
               audioFadeFrameRef.current = requestAnimationFrame(fadeIn);
             } else {
@@ -420,7 +439,7 @@ function ExpandedVideo({
           initialAudioFadeAllowedRef.current = false;
           if (!hasUserAdjustedVolumeRef.current) {
             isApplyingSharedVolumeRef.current = true;
-            video.volume = loadMediaVolumePreferences().volume;
+            setVideoVolume(video, loadMediaVolumePreferences().volume);
             requestAnimationFrame(() => {
               isApplyingSharedVolumeRef.current = false;
             });
@@ -432,7 +451,7 @@ function ExpandedVideo({
       const preferences = (event as CustomEvent<MediaVolumePreferences>).detail;
       stopAudioFade();
       isApplyingSharedVolumeRef.current = true;
-      video.volume = preferences.volume;
+      setVideoVolume(video, preferences.volume);
       video.muted = preferences.muted;
       requestAnimationFrame(() => {
         isApplyingSharedVolumeRef.current = false;
@@ -527,10 +546,64 @@ function ExpandedVideo({
     isApplyingSharedVolumeRef.current = false;
   };
 
-  return (
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    return observeVideoFullscreen(video, setIsFullscreen);
+  }, []);
+
+  useEffect(() => {
+    // Notify the same playback/visibility observers used by native fullscreen.
+    document.dispatchEvent(new Event(videoFullscreenChangeEvent));
+    if (!isCssFullscreen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      setIsCssFullscreen(false);
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
+  }, [isCssFullscreen]);
+
+  const toggleFullscreen = async () => {
+    const frame = frameRef.current;
+    const video = videoRef.current;
+    if (!frame || !video) return;
+    const doc = document as Document & { webkitExitFullscreen?: () => void; webkitFullscreenElement?: Element | null };
+    if (isCssFullscreen) {
+      setIsCssFullscreen(false);
+      return;
+    }
+    if (doc.fullscreenElement || doc.webkitFullscreenElement) {
+      try { await (document.exitFullscreen?.() ?? doc.webkitExitFullscreen?.()); } catch { /* ignore */ }
+      return;
+    }
+    const f = frame as HTMLDivElement & { webkitRequestFullscreen?: () => void };
+    const request = f.requestFullscreen?.bind(frame) ?? f.webkitRequestFullscreen?.bind(frame);
+    try {
+      if (!request) throw new Error("unsupported");
+      await request();
+    } catch {
+      document.querySelectorAll("video").forEach((other) => { if (other !== video && !other.paused) other.pause(); });
+      setIsCssFullscreen(true);
+    }
+  };
+
+  const videoSwipe = useFullscreenSwipeDismiss(frameRef, isFullscreen || isCssFullscreen,
+    () => { void toggleFullscreen(); });
+
+  const videoFrame = (
     <div
-      className={`expanded-media-video-frame${bordered ? " is-bordered" : ""}`}
+      ref={frameRef}
+      className={`expanded-media-video-frame${bordered ? " is-bordered" : ""}${isCssFullscreen ? " is-css-fullscreen" : ""}`}
       data-detail-page-content
+      role={isCssFullscreen ? "dialog" : undefined}
+      aria-modal={isCssFullscreen ? true : undefined}
+      aria-label={isCssFullscreen ? label : undefined}
+      {...frameVisibility}
+      {...videoSwipe}
+      onClick={(event) => { if (isCssFullscreen) event.stopPropagation(); }}
     >
       <video
         ref={initializeVideo}
@@ -544,8 +617,6 @@ function ExpandedVideo({
         playsInline
         disablePictureInPicture
         preload={loading.preload}
-        {...controlsVisibility}
-        controlsList="nodownload"
         tabIndex={0}
         aria-label={label}
         onLoadedMetadata={(event) => {
@@ -555,9 +626,9 @@ function ExpandedVideo({
           // Playback now starts at zero without downloading six seconds first.
           loading.markMetadata();
           isApplyingSharedVolumeRef.current = true;
-          video.volume = initialAudioFadeAllowedRef.current && !hasUserAdjustedVolumeRef.current
+          setVideoVolume(video, initialAudioFadeAllowedRef.current && !hasUserAdjustedVolumeRef.current
             ? Math.min(audioFadeStartVolume, preferences.volume)
-            : preferences.volume;
+            : preferences.volume);
           video.muted = preferences.muted;
           if (!initialAudioFadeAllowedRef.current || hasUserAdjustedVolumeRef.current) {
             requestAnimationFrame(() => {
@@ -567,6 +638,23 @@ function ExpandedVideo({
         }}
         onPointerDownCapture={beginManualVolumeAdjustment}
         onKeyDownCapture={beginManualVolumeAdjustment}
+        onKeyDown={(event) => {
+          const video = event.currentTarget;
+          if (event.key === " " || event.key.toLowerCase() === "k") {
+            event.preventDefault();
+            if (video.paused) void video.play().then(() => {
+              if (videoRef.current === video && !video.paused) onPlaybackStarted();
+            }).catch(reportPlayError);
+            else {
+              video.pause();
+              onPlaybackPaused();
+            }
+          } else if ((event.key === "ArrowLeft" || event.key === "ArrowRight") && Number.isFinite(video.duration)) {
+            event.preventDefault();
+            video.currentTime = Math.max(0, Math.min(video.duration,
+              video.currentTime + (event.key === "ArrowRight" ? 5 : -5)));
+          }
+        }}
         onPlay={loading.markPlay}
         onPause={loading.markPause}
         onCanPlay={loading.markReady}
@@ -580,7 +668,7 @@ function ExpandedVideo({
         onVolumeChange={(event) => {
           if (isApplyingSharedVolumeRef.current) return;
           saveMediaVolumePreferences({
-            volume: event.currentTarget.volume,
+            volume: getVideoVolume(event.currentTarget),
             muted: event.currentTarget.muted,
           });
         }}
@@ -598,8 +686,23 @@ function ExpandedVideo({
           </div>
         )}
       </div>
+      <CustomVideoControls
+        videoRef={videoRef}
+        label={label}
+        visible={controlsVisible}
+        showCenterAtRest
+        showToolbarWhilePaused={showToolbarWhilePaused}
+        onPlaybackStarted={onPlaybackStarted}
+        onPlaybackPaused={onPlaybackPaused}
+        fullscreen={isFullscreen || isCssFullscreen}
+        onToggleFullscreen={() => void toggleFullscreen()}
+        onManualVolume={beginManualVolumeAdjustment}
+        onPlayError={reportPlayError}
+      />
     </div>
   );
+
+  return videoFrame;
 }
 
 type ExpandedMediaGroup = {

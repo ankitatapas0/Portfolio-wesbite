@@ -4,6 +4,7 @@ import { DesktopPage } from "./pages/DesktopPage";
 import { SimplePage } from "./pages/SimplePage";
 import { useLandscapeScreenGuard } from "./hooks/useLandscapeScreenGuard";
 import { portfolioRouteChangeEvent } from "./portfolioRouting";
+import faviconSvg from "./assets/branding/favicon.svg?raw";
 
 function getPage(hash: string): PageName {
   const page = hash.replace("#/", "");
@@ -43,6 +44,9 @@ export default function App() {
       .getPropertyValue("--color-main-1").trim();
     document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
       ?.setAttribute("content", backgroundColor);
+    const icon = faviconSvg.replace('fill="black"', isThemeInverted ? 'fill="white"' : 'fill="black"');
+    document.querySelector<HTMLLinkElement>("#portfolio-favicon")
+      ?.setAttribute("href", `data:image/svg+xml,${encodeURIComponent(icon)}`);
   }, [isThemeInverted]);
 
   if (isLandscapeScreenBlocked) {

@@ -151,7 +151,7 @@ const slots: MediaSlotData[] = [
     expandedLabel: "Xbox app design detail page",
     expandedTitle: "Xbox App Design",
     expandedSubtitleLines: [
-      "I led the redesign of the Xbox app landing experience to address low discovery and engagement. The redesign is centered around players’ games, interests, and communities, bringing together personalized recommendations, richer game information, social proof, friend activity, and customization",
+      "I led the redesign of the Xbox app Home experience to address low discovery and engagement. The redesign is centered around players’ games, interests, and communities, bringing together personalized recommendations, richer game information, social proof, friend activity, and customization",
     ],
   },
   {
@@ -315,7 +315,7 @@ const slots: MediaSlotData[] = [
     expandedLabel: "Xbox in 2030 detail page",
     expandedTitle: "Xbox in 2030",
     expandedSubtitleLines: [
-      "I partnered with a small group of product leads to shape a vision for Xbox’s near future: making it effortless to jump into a game with anyone, bringing games together in one unified library, and championing open-source creation and personalization. Each area of that vision has since become part of the Xbox experience, reaching millions of players globally",
+      "I partnered with a small group of product leads to shape a vision for Xbox’s near future: making it effortless to jump into a game with anyone, bringing games together in one unified library, and championing open-source creation and personalization. Each area of this vision has since become part of the Xbox experience in some way",
     ],
   },
   {
@@ -332,7 +332,7 @@ const slots: MediaSlotData[] = [
     expandedLabel: "Xbox x Discord brand intro",
     expandedTitle: "Xbox x Discord Launch Screen",
     expandedSubtitleLines: [
-      "I led the design of the stream launch screen for Xbox players sharing their gameplay on Discord, creating a shared brand moment before players go live with their audience. This exploration used looping circular motion and contrasts of light and dark to bring the visual identities of Xbox and Discord together",
+      "These are some of the explorations of the stream launch screen for Xbox players sharing their gameplay with their audience on Discord. Looping circular motion and contrasts of light and dark brought the visual identities of Xbox and Discord together creating a shared brand moment",
     ],
   },
   {

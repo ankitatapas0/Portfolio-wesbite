@@ -8,6 +8,14 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { DetailGlassBand } from "./DetailGlassBand";
+import { useDetailCursorHint } from "./useDetailCursorHint";
+
+// Keep the BACK hint and background activation on exactly the same surface.
+function isBackSurface(target: EventTarget | null) {
+  return target instanceof Element && !target.closest(
+    "[data-detail-page-content], button, a, input, select, textarea, [role='button'], [role='slider']",
+  );
+}
 
 type DetailPageTransitionProps = {
   children: ReactNode;
@@ -41,6 +49,7 @@ export function DetailPageTransition({
   restoreFocusRef.current = restoreFocus;
   const [shouldRender, setShouldRender] = useState(isOpen);
   const [isClosing, setIsClosing] = useState(false);
+  const backCursor = useDetailCursorHint(isOpen && shouldRender && !isClosing, "BACK", isBackSurface);
 
   useEffect(() => {
     if (isOpen) {
@@ -86,9 +95,14 @@ export function DetailPageTransition({
     const dialog = dialogRef.current;
     if (!dialog) return;
 
-    const focusScope = () => document.querySelector<HTMLElement>(
-      ".expanded-media-image-frame.is-css-fullscreen",
-    ) ?? dialog;
+    const focusScope = () => {
+      const fullscreenDocument = document as Document & { webkitFullscreenElement?: Element | null };
+      const nativeFullscreen = fullscreenDocument.fullscreenElement ?? fullscreenDocument.webkitFullscreenElement;
+      if (nativeFullscreen instanceof HTMLElement && dialog.contains(nativeFullscreen)) return nativeFullscreen;
+      return document.querySelector<HTMLElement>(
+        ".expanded-media-image-frame.is-css-fullscreen, .expanded-media-video-frame.is-css-fullscreen",
+      ) ?? dialog;
+    };
     const getFocusableElements = () => Array.from(
       focusScope().querySelectorAll<HTMLElement>(
         'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), video[controls], [contenteditable="true"], [tabindex]:not([tabindex="-1"])',
@@ -249,11 +263,9 @@ export function DetailPageTransition({
         ref={backdropRef}
         className={`detail-page-transition-backdrop${isClosing ? " is-closing" : ""}`}
         role="presentation"
+        {...backCursor.pointerEvents}
         onMouseDown={(event) => {
-          if (!isOpen) return;
-
-          const target = event.target;
-          if (target instanceof Element && target.closest("[data-detail-page-content]")) return;
+          if (!isOpen || event.button !== 0 || !isBackSurface(event.target)) return;
 
           onClose();
         }}
@@ -265,6 +277,7 @@ export function DetailPageTransition({
           {children}
         </section>
       </div>
+      {backCursor.cursor}
       <DetailGlassBand isClosing={isClosing} backdropRef={backdropRef} />
       <div
         ref={scrollbarTrackRef}
