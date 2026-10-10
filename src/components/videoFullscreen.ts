@@ -18,13 +18,26 @@ export function observeVideoFullscreen(
 ): () => void {
   const document = video.ownerDocument;
   let nativeFullscreen = false;
-  const update = () => onChange(nativeFullscreen || isVideoFullscreen(video));
+  let wasFullscreen = false;
+  const update = () => {
+    const fullscreen = nativeFullscreen || isVideoFullscreen(video);
+    if (fullscreen && !wasFullscreen) {
+      // Fullscreen entry may happen while this player is paused, so ownership
+      // cannot depend only on the normal play event.
+      document.querySelectorAll("video").forEach((other) => {
+        if (other !== video && !other.paused) other.pause();
+      });
+    }
+    wasFullscreen = fullscreen;
+    onChange(fullscreen);
+  };
   const beginNativeFullscreen = () => {
     nativeFullscreen = true;
     update();
   };
   const endNativeFullscreen = () => {
     nativeFullscreen = false;
+    wasFullscreen = false;
     onChange(false);
   };
   document.addEventListener("fullscreenchange", update);

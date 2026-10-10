@@ -16,6 +16,8 @@ export function NavigationSpecificationsTable({
   const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ x: number; left: number } | null>(null);
+  const contentDragRef = useRef<{ pointerId: number; x: number; left: number } | null>(null);
+  const [isContentDragging, setIsContentDragging] = useState(false);
   const [scroll, setScroll] = useState({
     overflow: false, before: false, after: false,
     left: 0, max: 0, thumbWidth: 0, thumbOffset: 0,
@@ -40,6 +42,17 @@ export function NavigationSpecificationsTable({
   };
 
   useLayoutEffect(() => {
+    // A resize can remove the captured track before React receives capture-loss
+    // or pointer-up. Do not carry that drag into a newly mounted scrollbar.
+    if (!scroll.overflow) {
+      dragRef.current = null;
+      const drag = contentDragRef.current;
+      contentDragRef.current = null;
+      setIsContentDragging(false);
+      if (drag && viewportRef.current?.hasPointerCapture(drag.pointerId)) {
+        viewportRef.current.releasePointerCapture(drag.pointerId);
+      }
+    }
     const viewport = viewportRef.current;
     if (!viewport) return;
     const observer = new ResizeObserver(updateScroll);
@@ -74,6 +87,40 @@ export function NavigationSpecificationsTable({
     viewport.scrollLeft = drag.left + (event.clientX - drag.x) / travel * scroll.max;
   };
 
+  const endContentDrag = (event: PointerEvent<HTMLDivElement>) => {
+    if (contentDragRef.current?.pointerId !== event.pointerId) return;
+    contentDragRef.current = null;
+    setIsContentDragging(false);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  const beginContentDrag = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== "mouse" || event.button !== 0 || !scroll.overflow || event.shiftKey) return;
+    if (event.target instanceof Element
+      && event.target.closest("a, button, input, select, textarea")) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.focus({ preventScroll: true });
+    event.currentTarget.setPointerCapture(event.pointerId);
+    contentDragRef.current = {
+      pointerId: event.pointerId, x: event.clientX, left: event.currentTarget.scrollLeft,
+    };
+    setIsContentDragging(true);
+  };
+
+  const moveContentDrag = (event: PointerEvent<HTMLDivElement>) => {
+    const drag = contentDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    if (!(event.buttons & 1)) {
+      endContentDrag(event);
+      return;
+    }
+    event.preventDefault();
+    event.currentTarget.scrollLeft = drag.left - (event.clientX - drag.x);
+  };
+
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const viewport = viewportRef.current;
     if (!viewport) return;
@@ -95,11 +142,17 @@ export function NavigationSpecificationsTable({
       <div
         id={viewportId}
         ref={viewportRef}
-        className={`navigation-specifications-scroll${scroll.overflow ? " has-horizontal-overflow" : ""}${scroll.before ? " has-more-left" : ""}${scroll.after ? " has-more-right" : ""}`}
+        className={`navigation-specifications-scroll${scroll.overflow ? " has-horizontal-overflow" : ""}${scroll.before ? " has-more-left" : ""}${scroll.after ? " has-more-right" : ""}${isContentDragging ? " is-content-dragging" : ""}`}
         role="region"
         aria-label={`${label} specifications`}
         tabIndex={0}
         onScroll={updateScroll}
+        onPointerDown={beginContentDrag}
+        onPointerMove={moveContentDrag}
+        onPointerUp={endContentDrag}
+        onPointerCancel={endContentDrag}
+        onLostPointerCapture={endContentDrag}
+        onKeyDown={handleKeyDown}
       >
         <table className="navigation-specifications-table" aria-label={`${label} specifications`}>
           <thead>

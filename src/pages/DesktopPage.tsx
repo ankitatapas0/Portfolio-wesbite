@@ -1,4 +1,6 @@
 import { useEffect, useRef } from "react";
+import { useGalleryGyro } from "../hooks/useGalleryGyro";
+import { GALLERY_DRAG_YAW, GALLERY_DRAG_TILT } from "../lib/galleryMotion";
 import {
   MediaSlot,
   type DetailCloseRequest,
@@ -13,6 +15,19 @@ import gettyRestImage from "../../delivery-media/Desktop images/4_GettyUnshutter
 import operaVideo from "../../delivery-media/Desktop images/5_Opera_1x1.mp4";
 import operaRestImage from "../../delivery-media/Desktop images/5_Opera_1x1_image.jpg.webp";
 import weekndImage from "../../delivery-media/Desktop images/MM_weekend_noLogo.png.webp";
+import beyonceVideo from "../../delivery-media/Desktop images/Beyonce_NewAlbum_2x3.mp4";
+import beyonceYoutubeVideo from "../../delivery-media/Beyonce/Beyonce_Youtube_10s.mp4";
+import beyonceTiktokVideo from "../../delivery-media/Beyonce/Beyonce_tiktok_10s.mp4";
+import beyonceMobileVideo from "../../delivery-media/Beyonce/Beyonce_mobile_10s.mp4";
+import huluUpHereVideo from "../../delivery-media/Desktop images/Hulu_upHere_16x9.mp4";
+import hboMaxImage from "../../delivery-media/Desktop images/HBO_max_heavensGate.png.webp";
+import appleTvBaseballVideo1 from "../../delivery-media/Apple TV Baseball/Video1.mp4";
+import appleTvBaseballVideo2 from "../../delivery-media/Apple TV Baseball/Video2.mp4";
+import eltonJohnRestImage from "../../delivery-media/Desktop images/EltonJohn_radio_1x1.png.webp";
+import eltonJohnImage1 from "../../delivery-media/Elton John Radio Show/1.png.webp";
+import eltonJohnVideo2 from "../../delivery-media/Elton John Radio Show/2.mp4";
+import eltonJohnImage3 from "../../delivery-media/Elton John Radio Show/3.png.webp";
+import eltonJohnImage4 from "../../delivery-media/Elton John Radio Show/4.png.webp";
 import xboxPcRedesignVideo from "../../delivery-media/Desktop images/Xbox_PC_Redesign_16x9.mp4";
 import xboxCopilotVideo from "../../delivery-media/Desktop images/Xbox_copilot_16x9.mp4";
 import xboxCopilotDetailVideo from "../../delivery-media/Xbox Copilot/Main copilot video.mp4";
@@ -70,6 +85,20 @@ import anittaNycVideo from "../../delivery-media/AM_Spatial sound/Anitta_NYC.mp4
 import zeddMobileVideo from "../../delivery-media/AM_Spatial sound/Zedd_Mobile.mp4";
 import zeddNycVideo from "../../delivery-media/AM_Spatial sound/Zedd_NYC.mp4";
 
+// Replit uses bounded server-side ranges for large films. Standalone exports
+// retain the original static URL when the Replit-only build flag is absent.
+const xbox2030PlaybackSource = import.meta.env.VITE_VIDEO_RANGE_STREAMING === "true"
+  ? `${import.meta.env.BASE_URL}api/media/xbox-2030?v=${encodeURIComponent(xbox2030DetailVideo.split("/").at(-1) ?? "")}`
+  : xbox2030DetailVideo;
+const xbox2030Metadata = videoMetadata[xbox2030DetailVideo];
+if (xbox2030Metadata) videoMetadata[xbox2030PlaybackSource] = xbox2030Metadata;
+
+const gettyDetailPlaybackSource = import.meta.env.VITE_VIDEO_RANGE_STREAMING === "true"
+  ? `${import.meta.env.BASE_URL}api/media/getty-video-1?v=${encodeURIComponent(gettyDetailVideo.split("/").at(-1) ?? "")}`
+  : gettyDetailVideo;
+const gettyDetailMetadata = videoMetadata[gettyDetailVideo];
+if (gettyDetailMetadata) videoMetadata[gettyDetailPlaybackSource] = gettyDetailMetadata;
+
 const slots: MediaSlotData[] = [
   {
     detailSlug: "xbox-app-redesign",
@@ -82,18 +111,40 @@ const slots: MediaSlotData[] = [
     hoverVideoSrc: xboxPcRedesignVideo,
     expandedImageBorder: true,
     expandedMediaSlides: [
-      [{ source: xboxPcAfterImage2, type: "image" }],
+      [{
+        source: xboxPcAfterImage2,
+        type: "image",
+        alt: "Redesigned Xbox app home with a friends sidebar, friend activity cards, an expanded Astroneer preview over game recommendations, and a Fortnite activity row",
+      }],
       [
-        { source: xboxPcBeforeImage1, type: "image", caption: "Before" },
-        { source: xboxPcAfterImage1, type: "image", caption: "After" },
+        {
+          source: xboxPcBeforeImage1, type: "image", caption: "Before",
+          alt: "Before: Xbox app home with navigation and recent games in the sidebar, large promotional tiles for Gears of War: E-Day, and a Recently added to Game Pass row",
+        },
+        {
+          source: xboxPcAfterImage1, type: "image", caption: "After",
+          alt: "After: Redesigned Xbox app home with a Grand Theft Auto VI Jump back in card, recent games, a friends sidebar, friend activity cards, and recommendations based on Starfield",
+        },
       ],
       [
-        { source: xboxPcBeforeImage2, type: "image", caption: "Before" },
-        { source: xboxPcAfterImage3, type: "image", caption: "After" },
+        {
+          source: xboxPcBeforeImage2, type: "image", caption: "Before",
+          alt: "Before: Xbox app home showing Top paid games, a wide Call of Duty: Modern Warfare 4 promotion, and Day one releases with Game Pass",
+        },
+        {
+          source: xboxPcAfterImage3, type: "image", caption: "After",
+          alt: "After: Redesigned Xbox app home showing a Fortnite Festival activity row with achievements and friends, a featured Kiln card, and What everyone’s playing with active player counts",
+        },
       ],
       [
-        { source: xboxPcBeforeImage3, type: "image", caption: "Before" },
-        { source: xboxPcAfterImage4, type: "image", caption: "After" },
+        {
+          source: xboxPcBeforeImage3, type: "image", caption: "Before",
+          alt: "Before: Xbox app with a separate floating chat window and a Friends panel with Friends and Chats tabs, a Start a party button, and online and offline lists",
+        },
+        {
+          source: xboxPcAfterImage4, type: "image", caption: "After",
+          alt: "After: Redesigned Xbox app with a tall chat panel beside the friends sidebar, Invite to party and View profile buttons, and the home game cards still visible behind it",
+        },
       ],
     ],
     restLabel: "Xbox app design",
@@ -103,7 +154,26 @@ const slots: MediaSlotData[] = [
       "I led the redesign of the Xbox app landing experience to address low discovery and engagement. The redesign is centered around players’ games, interests, and communities, bringing together personalized recommendations, richer game information, social proof, friend activity, and customization",
     ],
   },
-  { id: "b", ratio: "1:1", layer: 2, projectLabel: "Project 02", projectTags: ["Identity"] },
+  {
+    detailSlug: "apple-tv-baseball-idents",
+    id: "b",
+    ratio: "1:1",
+    layer: 2,
+    projectLabel: "Apple TV",
+    projectTags: ["Jumbotron"],
+    imageSrc: videoMetadata[appleTvBaseballVideo1].poster,
+    hoverVideoSrc: appleTvBaseballVideo1,
+    expandedMediaSlides: [
+      [{ source: appleTvBaseballVideo1, type: "video" }],
+      [{ source: appleTvBaseballVideo2, type: "video" }],
+    ],
+    restLabel: "Apple TV Baseball",
+    expandedLabel: "Cinematic Apple TV Baseball Idents detail page",
+    expandedTitle: "Cinematic Apple TV Baseball Idents",
+    expandedSubtitleLines: [
+      "I led the design of Apple TV’s baseball idents for massive jumbotron screens, using simple motion to create a cinematic, immersive experience that can be viewed at scale",
+    ],
+  },
   {
     detailSlug: "opera-live-visuals",
     id: "c",
@@ -118,7 +188,7 @@ const slots: MediaSlotData[] = [
     thirdExpandedVideoSrc: operaThirdDetailVideo,
     restLabel: "Opera",
     expandedLabel: "Opera live visuals detail page",
-    expandedTitle: "Live visuals to Opera & Tango",
+    expandedTitle: "Live Visuals to Opera & Tango",
     expandedSubtitleLines: [
       "I directed an animated opera for New Opera West, screened at the Hudson Guild Theatre alongside a live vocal performance by Brande N. Carrie. The visuals were also featured in a separate show, accompanying a live tango performed by Robert Wang.",
     ],
@@ -153,7 +223,7 @@ const slots: MediaSlotData[] = [
     ],
     restLabel: "ALT CTRL Yeah Yeah Yeahs",
     expandedLabel: "Apple music playlists detail page",
-    expandedTitle: "Apple music playlists",
+    expandedTitle: "Apple Music Playlists",
     expandedSubtitleLines: [
       "I designed a flexible system of Apple Music playlist idents, capturing the character of each genre while maintaining a cohesive Apple identity. Built to feature different artists within each genre, the system allowed playlists to evolve while retaining a consistent visual language.",
     ],
@@ -190,8 +260,10 @@ const slots: MediaSlotData[] = [
     layer: 1,
     projectLabel: "NAVIGATION",
     projectTags: ["SYSTEM", "PRODUCT"],
-    imageSrc: videoMetadata[navigationIntroVideo].poster,
-    hoverVideoSrc: navigationIntroDetailVideo,
+    // Identical video copies share a URL in production. Resolve the frame-10
+    // poster directly so the detail video's frame-1 metadata cannot override it.
+    imageSrc: new URL("../../delivery-media/Desktop images/Navigation_intro.mp4.poster.webp", import.meta.url).href,
+    hoverVideoSrc: navigationIntroVideo,
     expandedVideoSrc: navigationIntroDetailVideo,
     expandedImageBorder: true,
     expandedMediaSlides: [
@@ -238,7 +310,7 @@ const slots: MediaSlotData[] = [
     projectLabel: "Xbox 2030",
     projectTags: ["Product vision"],
     videoSrc: xbox2030VisionVideo,
-    expandedVideoSrc: xbox2030DetailVideo,
+    expandedVideoSrc: xbox2030PlaybackSource,
     restLabel: "Xbox 2030 product vision",
     expandedLabel: "Xbox in 2030 detail page",
     expandedTitle: "Xbox in 2030",
@@ -258,7 +330,7 @@ const slots: MediaSlotData[] = [
     alternateExpandedVideoSrc: xboxDiscord2DVideo,
     restLabel: "Xbox Discord stream screen",
     expandedLabel: "Xbox x Discord brand intro",
-    expandedTitle: "Xbox x Discord launch screen",
+    expandedTitle: "Xbox x Discord Launch Screen",
     expandedSubtitleLines: [
       "I led the design of the stream launch screen for Xbox players sharing their gameplay on Discord, creating a shared brand moment before players go live with their audience. This exploration used looping circular motion and contrasts of light and dark to bring the visual identities of Xbox and Discord together",
     ],
@@ -272,10 +344,58 @@ const slots: MediaSlotData[] = [
     imageSrc: weekndImage,
     restLabel: "The Weeknd",
     externalHref: "https://www.instagram.com/p/CSNq7TsFPeJ/",
+    externalMessageFollowsTags: true,
   },
-  { id: "k", ratio: "2:3", layer: 2, projectLabel: "Project 11", projectTags: ["Print"] },
-  { id: "l", ratio: "16:9", layer: 2, projectLabel: "Project 12", projectTags: ["Film"] },
-  { id: "m", ratio: "16:9", layer: 3, projectLabel: "Project 13", projectTags: ["Digital"] },
+  {
+    detailSlug: "beyonce-apple-music",
+    id: "k",
+    ratio: "2:3",
+    layer: 2,
+    projectLabel: "Beyoncé",
+    projectTags: ["Social Media"],
+    imageSrc: videoMetadata[beyonceVideo].poster,
+    hoverVideoSrc: beyonceVideo,
+    expandedMediaSlides: [
+      [{ source: beyonceYoutubeVideo, type: "video" }],
+      [
+        { source: beyonceTiktokVideo, type: "video" },
+        { source: beyonceMobileVideo, type: "video" },
+      ],
+    ],
+    restLabel: "Beyoncé",
+    expandedLabel: "Beyoncé x Apple Music detail page",
+    expandedTitle: "Beyoncé x Apple Music",
+    expandedSubtitleLines: [
+      "I created a short ident for the release of Beyoncé’s Renaissance on Apple Music",
+    ],
+  },
+  {
+    id: "l",
+    ratio: "16:9",
+    layer: 2,
+    projectLabel: "HBO Max",
+    projectTags: ["Motion & Paint"],
+    imageSrc: hboMaxImage,
+    externalHref: "https://statedesign.tv/work/campfire-heavens-gate/",
+    externalMessage: "This link will take you to the State Design project page",
+    externalMessageFollowsTags: true,
+    externalLinkLabel: "View HBO Max on State Design (opens in a new tab)",
+    restLabel: "HBO Max Campfire: Heaven's Gate project artwork",
+  },
+  {
+    id: "m",
+    ratio: "16:9",
+    layer: 3,
+    projectLabel: "Hulu",
+    projectTags: ["TV title sequence"],
+    imageSrc: videoMetadata[huluUpHereVideo].poster,
+    hoverVideoSrc: huluUpHereVideo,
+    externalHref: "https://www.yuco.com/works/up-here",
+    externalMessage: "This will link you to the Yu+Co project page",
+    externalMessageFollowsTags: true,
+    externalLinkLabel: "View Hulu on Yuco (opens in a new tab)",
+    restLabel: "Hulu Up Here title sequence",
+  },
   {
     detailSlug: "getty-unshuttered",
     id: "n",
@@ -298,7 +418,7 @@ const slots: MediaSlotData[] = [
       [{ source: gettyDetailImage3, type: "image" }],
       [{ source: gettyDetailImage4, type: "image" }],
       [
-        { source: gettyDetailVideo, type: "video" },
+        { source: gettyDetailPlaybackSource, type: "video", prefetchInitialRange: true },
         { source: gettyDetailImage9, type: "image" },
       ],
       [{ source: gettyDetailImage6, type: "image" }],
@@ -319,7 +439,31 @@ const slots: MediaSlotData[] = [
     ],
     showExpandedCopyOnAllSlides: true,
   },
-  { id: "o", ratio: "1:1", layer: 3, projectLabel: "Project 15", projectTags: ["Motion"] },
+  {
+    detailSlug: "elton-john-radio-show",
+    id: "o",
+    ratio: "1:1",
+    layer: 3,
+    projectLabel: "Elton John Radio Show",
+    projectTags: ["Brand"],
+    imageSrc: eltonJohnRestImage,
+    expandedMediaSlides: [
+      [
+        { source: eltonJohnVideo2, type: "video" },
+        { source: eltonJohnImage3, type: "image", alt: "Elton John radio show artist treatment 3" },
+      ],
+      [
+        { source: eltonJohnImage1, type: "image", alt: "Elton John radio show artist treatment 1" },
+        { source: eltonJohnImage4, type: "image", alt: "Elton John radio show artist treatment 4" },
+      ],
+    ],
+    restLabel: "Elton John Radio Show artwork",
+    expandedLabel: "Elton John Radio Show detail page",
+    expandedTitle: "Elton John Radio Show",
+    expandedSubtitleLines: [
+      "I designed artist treatments for Elton John’s radio show, using Apple’s shared design language to capture the show’s lively energy",
+    ],
+  },
   {
     detailSlug: "xbox-copilot-ideation",
     id: "p",
@@ -336,7 +480,7 @@ const slots: MediaSlotData[] = [
       "I worked with a small group of product leaders to explore how Xbox Copilot could solve meaningful problems for players. While the project never reached production following the cancellation of the broader Xbox Copilot initiative, the process and ideas felt worth sharing",
     ],
     expandedMediaSlides: [
-      [{ source: xboxCopilotDetailVideo, type: "video" }],
+      [{ source: xboxCopilotDetailVideo, type: "video", bordered: true }],
       [{ source: xboxCopilotImage1, type: "image" }],
       [{ source: xboxCopilotImage2, type: "image" }],
       [{ source: xboxCopilotImage3, type: "image" }],
@@ -346,7 +490,7 @@ const slots: MediaSlotData[] = [
       [{ source: xboxCopilotImage7, type: "image" }],
       [{ source: xboxCopilotImage8, type: "image" }],
       [{ source: xboxCopilotImage9, type: "image" }],
-      [{ source: xboxCopilotImage10, type: "image" }],
+      [{ source: xboxCopilotImage10, type: "image", bordered: true }],
     ],
   },
 ];
@@ -358,6 +502,7 @@ type DesktopPageProps = {
 export function DesktopPage({ closeDetailRequest }: DesktopPageProps) {
   const artboardRef = useRef<HTMLElement>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const gyro = useGalleryGyro(artboardRef);
 
   useEffect(() => {
     const artboard = artboardRef.current;
@@ -374,13 +519,14 @@ export function DesktopPage({ closeDetailRequest }: DesktopPageProps) {
       if (
         document.body.classList.contains("has-detail-page-open")
         || window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        || (gyro.active && activePointerId === null)
       ) return;
 
       const bounds = artboard.getBoundingClientRect();
       const pointerX = Math.max(-1, Math.min(1, ((event.clientX - bounds.left) / bounds.width) * 2 - 1));
       const pointerY = Math.max(-1, Math.min(1, ((event.clientY - bounds.top) / bounds.height) * 2 - 1));
-      const yawRange = hasDragged ? 8 : 2;
-      const tiltRange = hasDragged ? 10 : 3;
+      const yawRange = hasDragged ? GALLERY_DRAG_YAW : 2;
+      const tiltRange = hasDragged ? GALLERY_DRAG_TILT : 3;
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = requestAnimationFrame(() => {
         artboard.style.setProperty("--camera-x", `${pointerX * -yawRange}deg`);
@@ -406,6 +552,23 @@ export function DesktopPage({ closeDetailRequest }: DesktopPageProps) {
         clickSuppressionTimeout = undefined;
       });
 
+      if (artboard.hasPointerCapture(pointerId)) {
+        artboard.releasePointerCapture(pointerId);
+      }
+    };
+
+    const cancelDragOnSuspend = () => {
+      if (activePointerId === null) return;
+
+      const pointerId = activePointerId;
+      activePointerId = null;
+      hasDragged = false;
+      suppressNextClick = false;
+      artboard.classList.remove("is-camera-dragging");
+      if (clickSuppressionTimeout !== undefined) {
+        window.clearTimeout(clickSuppressionTimeout);
+        clickSuppressionTimeout = undefined;
+      }
       if (artboard.hasPointerCapture(pointerId)) {
         artboard.releasePointerCapture(pointerId);
       }
@@ -464,6 +627,8 @@ export function DesktopPage({ closeDetailRequest }: DesktopPageProps) {
     window.addEventListener("pointermove", updateCamera, { passive: true });
     window.addEventListener("pointerup", endDrag);
     window.addEventListener("pointercancel", endDrag);
+    window.addEventListener("pagehide", cancelDragOnSuspend);
+    document.addEventListener("visibilitychange", cancelDragOnSuspend);
     artboard.addEventListener("pointerdown", beginDrag);
     artboard.addEventListener("pointermove", trackDrag);
     artboard.addEventListener("click", suppressDraggedClick, true);
@@ -473,16 +638,21 @@ export function DesktopPage({ closeDetailRequest }: DesktopPageProps) {
       window.removeEventListener("pointermove", updateCamera);
       window.removeEventListener("pointerup", endDrag);
       window.removeEventListener("pointercancel", endDrag);
+      window.removeEventListener("pagehide", cancelDragOnSuspend);
+      document.removeEventListener("visibilitychange", cancelDragOnSuspend);
       artboard.removeEventListener("pointerdown", beginDrag);
       artboard.removeEventListener("pointermove", trackDrag);
       artboard.removeEventListener("click", suppressDraggedClick, true);
       if (clickSuppressionTimeout !== undefined) window.clearTimeout(clickSuppressionTimeout);
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     };
-  }, []);
+  }, [gyro.active]);
 
   return (
     <main className="desktop-page">
+      <p className="gallery-introduction nav-tabs-type-ramp">
+        Hi, I'm Ankita, a Director &amp; Designer based in L.A.
+      </p>
       <section
         ref={artboardRef}
         className="artboard"

@@ -1,0 +1,521 @@
+{
+  "schema": 1,
+  "assets": {
+    "Desktop images/1_AM_SpatialSound_1x1.mp4": {
+      "sourceSha256": "bdc66b6904498eaaf66d1406c3ec15902674878b8d6e51ebb5a7bed17be4b916",
+      "outputs": {
+        "Desktop images/1_AM_SpatialSound_1x1.mp4": "6d30f877e2a056da06bd60d8a18172b737d8a5e5a51338a54759047971597044",
+        "Desktop images/1_AM_SpatialSound_1x1.mp4.poster.webp": "6e52c8bfd7afc1903141984f2b1d7d9fc6ab70d3ffa0fcde13abe9a2e8eaad4d"
+      }
+    },
+    "Desktop images/2_Xbox_DiscordStreamscreen_1x1.mp4": {
+      "sourceSha256": "7eecf38858df7e15bb9173fc05b842f6e84df72a5dd53b2488a856e0a9e4dc5b",
+      "outputs": {
+        "Desktop images/2_Xbox_DiscordStreamscreen_1x1.mp4": "931b2afff9aaee420ca3ea9abbd2ea611324ab7a53897ea09cab76a625dd6b41",
+        "Desktop images/2_Xbox_DiscordStreamscreen_1x1.mp4.poster.webp": "705983a012bc388e238e7bffb2134df89d4dbb8c864fe578269f5f99a841af66"
+      }
+    },
+    "Desktop images/3_Xbox_2030_vision_16x9.mp4": {
+      "sourceSha256": "ecf5fa1292a3de8dbc9455e196358a0ea752d47bb854c283ca4aecffb6bb8a6b",
+      "outputs": {
+        "Desktop images/3_Xbox_2030_vision_16x9.mp4": "412f0d45053092c38e4e104a8c802f6e139c74d91a8e3aa0e103319a4e0e6cbe",
+        "Desktop images/3_Xbox_2030_vision_16x9.mp4.poster.webp": "5b33b844b6aa026cc7cd9c4a547bad0607295554929626982f49bd31f72f35a3"
+      }
+    },
+    "Desktop images/4_GettyUnshuttered_2x3.mp4": {
+      "sourceSha256": "bb0838f0e6ab5a62fd627bf4c2ce8f648b35ef7d8cab6cf904fc7b643211c3d7",
+      "outputs": {
+        "Desktop images/4_GettyUnshuttered_2x3.mp4": "379db7a1c77b5278445f44726eb4f6bdf2495952b0807041a5cf9ee0bb198970",
+        "Desktop images/4_GettyUnshuttered_2x3.mp4.poster.webp": "b2d209c9a326a936b632d36b2ebabeeb48495302480e8414d0b7256b5e10a106"
+      }
+    },
+    "Desktop images/4_GettyUnshuttered_2x3_image.png.webp": {
+      "sourceSha256": "0dcd0ba9546b28d15bdc93d9c09df88b2ffcec913df77b2ab5645605485a2779",
+      "outputs": {
+        "Desktop images/4_GettyUnshuttered_2x3_image.png.webp": "ef1dda98969c8189cf3542375bcf9362baa0dcd49acc090cc881353187a1988f"
+      }
+    },
+    "Desktop images/5_Opera_1x1.mp4": {
+      "sourceSha256": "2fdf3e4963091fc5d831ed85c7f87de6f41d19c4ca74ac097b2099afeb7e4ee7",
+      "outputs": {
+        "Desktop images/5_Opera_1x1.mp4": "5a9d16631dc5d67213031e608b92ec17789a85dacf34d62fa01df74286c35e9d",
+        "Desktop images/5_Opera_1x1.mp4.poster.webp": "6ed83a2bb26996d0470d8a029ea9948f180f0fb07ca3f8f368313c130fdb8db6"
+      }
+    },
+    "Desktop images/5_Opera_1x1_image.jpg.webp": {
+      "sourceSha256": "ef812bde05874a14acb800625a24daea57b2cc83f8e694580a9b7aee479e107c",
+      "outputs": {
+        "Desktop images/5_Opera_1x1_image.jpg.webp": "05940971ded7f746cdaef4cfa13ba0d92b6e78693625b833af4d6372278ff69c"
+      }
+    },
+    "Desktop images/MM_weekend_noLogo.png.webp": {
+      "sourceSha256": "6e15421bfe495895d900cfb1be84563abaf3e914756e9a404f0fbd0277a6411e",
+      "outputs": {
+        "Desktop images/MM_weekend_noLogo.png.webp": "322928e57b1962266eb822a78144e5b9959010ca26a565fffe4c38c32e002460"
+      }
+    },
+    "Desktop images/Xbox_PC_Redesign_16x9.mp4": {
+      "sourceSha256": "8c87416d7cbe9c9f402e1ba606c868aa428e7d885612ed1ebb97821e4ef5ecf2",
+      "outputs": {
+        "Desktop images/Xbox_PC_Redesign_16x9.mp4": "c97077cf4fbbe1aaa9c8a47d0c19b7ad147f13660603f169981d85cd815ec6ef",
+        "Desktop images/Xbox_PC_Redesign_16x9.mp4.poster.webp": "3f0d4256d1873ac69828d9586f1e0188fc80e09325b608c802c1e03a8dc9cb62"
+      }
+    },
+    "Desktop images/Xbox_copilot_16x9.mp4": {
+      "sourceSha256": "8e3374bb7b3f6be2dad1e9238a76d256a1750a5e463fa660a5bbf952781c98ec",
+      "outputs": {
+        "Desktop images/Xbox_copilot_16x9.mp4": "d64da52fb8255feb4fa94bb991c26895d18ba6640f36f0965378b00f88517357",
+        "Desktop images/Xbox_copilot_16x9.mp4.poster.webp": "22162b79fbfd3ca2059785457548572a1fdd05c6aec0b41203a2ca16e4030e3c"
+      }
+    },
+    "Xbox Copilot/Main copilot video.mp4": {
+      "sourceSha256": "c7b682d09e8f9da17c51ce85c2052bb828c6f513bedb32a7cdf617c3cb21a99f",
+      "outputs": {
+        "Xbox Copilot/Main copilot video.mp4": "077cb73a041192097d5ee978a2f135df313ab5a88b35bed49272283eac14fc47",
+        "Xbox Copilot/Main copilot video.mp4.poster.webp": "8bbaa07cb692c0c1432158c81daba4f594695763dbc8443890b3b3fac757859d"
+      }
+    },
+    "Xbox Copilot/Image1_00000.png.webp": {
+      "sourceSha256": "d32d9442fbcea47628e384b12624942f7798fc9c2be668c48817756cde1a9d53",
+      "outputs": {
+        "Xbox Copilot/Image1_00000.png.webp": "63f3cf19384e389e78b14d3c9bbe3849f1ce4462030e18b46a05c4cc524e2c58"
+      }
+    },
+    "Xbox Copilot/Image2_00000.png.webp": {
+      "sourceSha256": "d44c8552d57a671201bc6bef962edc98559f9413c4fa3b920d1101798e28aaa9",
+      "outputs": {
+        "Xbox Copilot/Image2_00000.png.webp": "3b6d423ef8ba3ff780e9e8436c11a1007e94979f212d129239bcc6ecb009dc37"
+      }
+    },
+    "Xbox Copilot/Image3_00000.png.webp": {
+      "sourceSha256": "f3e82e7214c807a0a0a26e78ee7586dfbf04c4d2982a5da92cb9c964eb54bdbf",
+      "outputs": {
+        "Xbox Copilot/Image3_00000.png.webp": "0fb7d477244fb3d64cf336d860bef5e0012c2b595c785ed9beadf29efcfb02e8"
+      }
+    },
+    "Xbox Copilot/Image4_00000.png.webp": {
+      "sourceSha256": "8b4d6dd1f702f1ba970b5d4d469243692ba54d113f2f1c5d8071ed2ed3af3b86",
+      "outputs": {
+        "Xbox Copilot/Image4_00000.png.webp": "0c8dc4700373fe57a5b323abdacc263c5bec5d0aaa49e349dde978abcf49f298"
+      }
+    },
+    "Xbox Copilot/Image5_00000.png.webp": {
+      "sourceSha256": "776fa10f16b879893e4dafa1c847fc7ecec7d4b3ce2edba8db39b5e70ab7900f",
+      "outputs": {
+        "Xbox Copilot/Image5_00000.png.webp": "d4222c514af647ef302075735d2b6271f5dcf370aff1cee486d450a081b44956"
+      }
+    },
+    "Xbox Copilot/Image6_00000.png.webp": {
+      "sourceSha256": "fc77932ee544246d4457784b8c98e4c8b57c9ed95f8117d5c2bd498f5cc3f398",
+      "outputs": {
+        "Xbox Copilot/Image6_00000.png.webp": "5c6d8ff0a3e880cfa43b8c7afc3a353f35b94e45bd8949b70c132c2f740bc704"
+      }
+    },
+    "Xbox Copilot/Image7_00000.png.webp": {
+      "sourceSha256": "f08d519b43cd666981ef656b4b6a77048c56adb056b7c86f598bd1b97cc33b01",
+      "outputs": {
+        "Xbox Copilot/Image7_00000.png.webp": "ebbe5495ef1ac1aa6e3075e43a709922165c74a02c3134b96fcb5ed72fd6ee2b"
+      }
+    },
+    "Xbox Copilot/Image8_00000.png.webp": {
+      "sourceSha256": "8f222313ce4ace6a6262143a3840b5e6eceb447444017fceb1cf78d7004b845b",
+      "outputs": {
+        "Xbox Copilot/Image8_00000.png.webp": "e74c2fe71ca72bed263ac12babf1d112438784f7bb2d3dcbf1eb6e9dac787054"
+      }
+    },
+    "Xbox Copilot/Image9_00000.png.webp": {
+      "sourceSha256": "515397f7360cce166bbac8e53d517972fdc8537682a572e0df72dd44b7d9e781",
+      "outputs": {
+        "Xbox Copilot/Image9_00000.png.webp": "25ba07e76e0bcdfcef61e814651fff7bf1f0dd184cbab8c21005474a9b3b2c2a"
+      }
+    },
+    "Xbox Copilot/Image10_00000.png.webp": {
+      "sourceSha256": "f110c24d1a7e70d1ee30077ef3947cd0e527f74de807f273bfa2da80af0acfa4",
+      "outputs": {
+        "Xbox Copilot/Image10_00000.png.webp": "24926956477f844162f666e146654285721d8c91d981ce8db2334ebd696cc1ed"
+      }
+    },
+    "Desktop images/Navigation_intro.mp4": {
+      "sourceSha256": "12a6ed78dbff7d6c02eeaea8aa639e5d7c24dfeeb31b73719268cb7f27ceba62",
+      "outputs": {
+        "Desktop images/Navigation_intro.mp4": "ba8e290aab20ab31d35cf9db573a8b495fd73cc3a37415a3a2437ed6aea6ded7",
+        "Desktop images/Navigation_intro.mp4.poster.webp": "e7d707ee0c2bde602bc7f8794e3a3f83b7f789f992623a65ce2f8349a8614640"
+      }
+    },
+    "Single videos/Navigation_intro.mp4": {
+      "sourceSha256": "12a6ed78dbff7d6c02eeaea8aa639e5d7c24dfeeb31b73719268cb7f27ceba62",
+      "outputs": {
+        "Single videos/Navigation_intro.mp4": "50d1892e68e8c2251dfae312408f523d0b98bc363fdbb2cee92429846c9d18f3",
+        "Single videos/Navigation_intro.mp4.poster.webp": "8b8eb4e53c006cdb3510afdb5d00bf855471abf11e3c4a8735aaa4795bbf85fc"
+      }
+    },
+    "Navigation/Desktop_nav.png.webp": {
+      "sourceSha256": "c7188fcee9ff62eb0c68ac4792abfe76b1f729c1a150ed9121401d09a7e5f8cc",
+      "outputs": {
+        "Navigation/Desktop_nav.png.webp": "925212d38807e19df3b2f515a3d7af83fd8e982afd95d112a91e59b8f9326d10",
+        "Navigation/Desktop_nav.png.webp.640w.webp": "8015ee64c9ec90f77dd9a68b722545dd01f2f248504b5535c0242a3b6a7d2dad",
+        "Navigation/Desktop_nav.png.webp.1280w.webp": "2e074631c0618a12db2161addba8ef921accea7bbb8e76152daf5ffe78315dd2"
+      }
+    },
+    "Navigation/Xbox mode Low density.png.webp": {
+      "sourceSha256": "b81a0862d85594c0096a2d8ac0d09990e29062a1d07c31b5ba70d74bff3dfcb7",
+      "outputs": {
+        "Navigation/Xbox mode Low density.png.webp": "55e58115a2be63badb36bc66b2dfa0c14c7d3169bac61f589b2e6210485be742",
+        "Navigation/Xbox mode Low density.png.webp.640w.webp": "afe29dc46d7ec03f348b2b09f0ea6488dcd63c56494cfc06e7ab2ddf27eb3f3a",
+        "Navigation/Xbox mode Low density.png.webp.1280w.webp": "5732bca76daffde202234b53f3d25c3db6f60fcc25f32fdfb9348d707c842656",
+        "Navigation/Xbox mode Low density.png.webp.1920w.webp": "43037248e2d6916393f3d9d1dcd54af36b1b5e522c1134666dbe144f2d28f15a",
+        "Navigation/Xbox mode Low density.png.webp.2560w.webp": "e95f4a324e682d6881f088c203d761c7f24240b24dd02fdaacbda3495fbc3d15"
+      }
+    },
+    "Navigation/Desktop mode high density.png.webp": {
+      "sourceSha256": "fadba5c02440249aa8927eb79ee771e83938c022cc8f14e42befda38344bf4e0",
+      "outputs": {
+        "Navigation/Desktop mode high density.png.webp": "5dc85722228d5e80f2525393d24916b2484d76899836ef9e33baf9b69ebc7c28",
+        "Navigation/Desktop mode high density.png.webp.640w.webp": "518fda5775fc769d4036350c4345b5f850cae0470b12e07b1bad989867fc412e",
+        "Navigation/Desktop mode high density.png.webp.1280w.webp": "dea1ec6fa4a7fba93c6be1e6d29aea2c49338511d25bb973c82509fc2765a59e",
+        "Navigation/Desktop mode high density.png.webp.1920w.webp": "e93a8764617f04623a3dc30e035f49218a7dab10de5d7e8edd4d97db657a4872",
+        "Navigation/Desktop mode high density.png.webp.2560w.webp": "24344c71ec2d29de1820d6a0f62005717caf036ec8b1578f3369ffa9b50dafb4"
+      }
+    },
+    "Opera/Opera_1.mp4": {
+      "sourceSha256": "a40b896291d808354145696397470530498724e0d5ac603b69c57eb081da27aa",
+      "outputs": {
+        "Opera/Opera_1.mp4": "4bf05451bc00b6dab51c23d524a5b1bbc5c6ec3cd19e153e754601cf3590a28c",
+        "Opera/Opera_1.mp4.poster.webp": "225d482ab1bdaac41312444881873941b8fd68abd976edf27bec92ce423325fe"
+      }
+    },
+    "Opera/Opera_2.mp4": {
+      "sourceSha256": "fc61df98ca166023877ce157cb6d6be0ebb1c4424f2eb27fbf493dfa2d6228d3",
+      "outputs": {
+        "Opera/Opera_2.mp4": "c489e04173258f6a8b43da2f62d8834b4dd4922a61a8eeb3583b68b65ebe6df4",
+        "Opera/Opera_2.mp4.poster.webp": "ddae95eee538b8372697c15cf6984bdc1e4bb307b7b88996b11de46f65f81bbb"
+      }
+    },
+    "Opera/Opera 3.mp4": {
+      "sourceSha256": "bbc28fcbfd26286aeb8609338aa2b22cf268b55affe37c02d7f16cf088164a22",
+      "outputs": {
+        "Opera/Opera 3.mp4": "115fa54fe40495fb35501daf4b799bc5073ed7be37b18b443397002edc3f3139",
+        "Opera/Opera 3.mp4.poster.webp": "4812b936ecc01b7afb3ea0ca5463e96af56726a63924f23cc69fbbfbe0acd063"
+      }
+    },
+    "Getty/Image1.jpg.webp": {
+      "sourceSha256": "2c440bab7bcd212e55f6de6ca32937f36f2eb50dc292a2e206be724ad02b4e24",
+      "outputs": {
+        "Getty/Image1.jpg.webp": "e91c7954e959d0b8d2042443e7a43cea6fc17f4b51a1ce139d32e894d5cb10f2"
+      }
+    },
+    "Getty/Image2.jpg.webp": {
+      "sourceSha256": "31187410c3a8f0730b1e8a050f0dbdcc3713213da156dac4d577ac4297531673",
+      "outputs": {
+        "Getty/Image2.jpg.webp": "0ed7fd3164b5c5a3159ceed2d6e2363fdc0b161e0b121b3f3c9eb0289fe350f3"
+      }
+    },
+    "Getty/Image3.jpg.webp": {
+      "sourceSha256": "50cdec7c76643a77a0b49ef68ee098bfa6bf8945d8968c6a4576a97e7653a317",
+      "outputs": {
+        "Getty/Image3.jpg.webp": "4f3e9c75055de314534df44a8b2fb67a2cd424850d19ffbf4fae772d01e78ae2"
+      }
+    },
+    "Getty/Image4.jpg.webp": {
+      "sourceSha256": "91d640ec7dd3c6380d25bc9321faed62aca6bff2ad7481f67d7018574a336e3f",
+      "outputs": {
+        "Getty/Image4.jpg.webp": "87b5d81cd23f485c1bcaa77e1dff556c597a4210ca40b2ee02aa139837fc560c"
+      }
+    },
+    "Getty/Image6.jpg.webp": {
+      "sourceSha256": "de1d3347e484a9d16ddaeb55221a2a6038b56132924d1780cfe0563f0ca5653a",
+      "outputs": {
+        "Getty/Image6.jpg.webp": "bcb1fb2ac7bc0b1ec6f12e8142fabc36b7d91520791b1d5a7de2cc50d0c26ec4"
+      }
+    },
+    "Getty/Image7.jpg.webp": {
+      "sourceSha256": "12e03101ea4efaff574a4457b49fea0c381928a66773885f50aaa9bb6439d4c2",
+      "outputs": {
+        "Getty/Image7.jpg.webp": "dc97d415d6dedd5c020b7ec9bc7478175542fe03ae7f0342389a3283a97ab128"
+      }
+    },
+    "Getty/Image8.jpg.webp": {
+      "sourceSha256": "a42f419334a85a997e84c05bafdb27a2c650312f554c53887bf9cb95a55896c9",
+      "outputs": {
+        "Getty/Image8.jpg.webp": "6931ebb2102c721625dd3312a7aab4e8f73fd8686cdd5e8f65cf541611d2d0d2"
+      }
+    },
+    "Getty/Image9.jpg.webp": {
+      "sourceSha256": "e0f06e3781ad9378a871840ca7f1da28caed285b523f4395605f8d6e56936e2e",
+      "outputs": {
+        "Getty/Image9.jpg.webp": "af273a1408309a44210c15561fc9e86e0d5718d63c58a58ee3610576de9df30e"
+      }
+    },
+    "Getty/Image10.jpg.webp": {
+      "sourceSha256": "b203e535cfcc8026d4692bcfbd04aea36f749be26a5de69d35b4863567a206a3",
+      "outputs": {
+        "Getty/Image10.jpg.webp": "e0d18603f31ed94e4e9e6fb4396c1ac189ef2e420e7d73946a4ff4347740443c"
+      }
+    },
+    "Getty/Getty video_1.mp4": {
+      "sourceSha256": "bb5a862dd6bae262a506c1fac49e755dcdf0dc72dbb537cd0f641d0b67bb8433",
+      "outputs": {
+        "Getty/Getty video_1.mp4": "e1d2c9b080d4f95d2be1a7bca1c2ae5a06dca1f459e4d1dcc8e6e39e3acccd9b",
+        "Getty/Getty video_1.mp4.poster.webp": "43c49acde16517f5f4df884ed5b7cbf6f3dbb451f3ef3b6b9aaccb4b26bc25bb"
+      }
+    },
+    "Getty/Fountain_Sq.mp4": {
+      "sourceSha256": "d2b72d85ba90f8008b8f1f55e72d9699561d229df39bdb67ae27715dd2bcac45",
+      "outputs": {
+        "Getty/Fountain_Sq.mp4": "c16189a3ea21df1ceaf1bf30410480c624512fbad75fa388994204958535a5e5",
+        "Getty/Fountain_Sq.mp4.poster.webp": "a6cbc10e8d1303cf1740dadd58cc1a31423310566891ad3e9b2207d8bf467e3a"
+      }
+    },
+    "AM_T1_playlists/ALT_CNTRL_YeahYeahYeahs_16x9.mp4": {
+      "sourceSha256": "1fe6a17a3d99a18ef0a911f89cc2ed744eb8c7c13c5f0bf365272cb2ddf79e1a",
+      "outputs": {
+        "AM_T1_playlists/ALT_CNTRL_YeahYeahYeahs_16x9.mp4": "38329094d666413ae651697d7c45d225624487cea57159968791ab887fb21176",
+        "AM_T1_playlists/ALT_CNTRL_YeahYeahYeahs_16x9.mp4.poster.webp": "b6ea65535d3ce4643a1c172558544cb9d26eeffc3dce634659bad9885c28da4d"
+      }
+    },
+    "AM_T1_playlists/ALT_CNTRL_YeahYeahYeahs_21x9.mp4": {
+      "sourceSha256": "03bdea088320427782653d937b935d9dc8979b17ba780bb219ce045df9283c6f",
+      "outputs": {
+        "AM_T1_playlists/ALT_CNTRL_YeahYeahYeahs_21x9.mp4": "7c5160bfeccd21f470f854c67329bd082c65545e6c658fbe403f9b6812865571",
+        "AM_T1_playlists/ALT_CNTRL_YeahYeahYeahs_21x9.mp4.poster.webp": "8acd10c9c2bce22412b51f48e2be37964e43ba0977734a7b17c88fccde27e628"
+      }
+    },
+    "AM_T1_playlists/Dale-play-rosalia_21x9.mp4": {
+      "sourceSha256": "148f1cd272e0f2a8bda77d2493e54d061d793e4526d0694cd2fe26f5e9c2788a",
+      "outputs": {
+        "AM_T1_playlists/Dale-play-rosalia_21x9.mp4": "ebba0046b06c213f34a2dd6edf1dad921723d84020e12a07562f68b8dafa8db5",
+        "AM_T1_playlists/Dale-play-rosalia_21x9.mp4.poster.webp": "810822cb3adfd5c326a17b8fc9e0d9d6f59e4e06d1310ce52594315c136e2d72"
+      }
+    },
+    "AM_T1_playlists/A_list_pop_DuaLipa_1x1.mp4": {
+      "sourceSha256": "44c5ad29217d40a732e2c482456d9a947ccf938cd54935b98e6f345859f0890e",
+      "outputs": {
+        "AM_T1_playlists/A_list_pop_DuaLipa_1x1.mp4": "e1a9a03e7b85d9eb950958e890aa77ad743af5181cd87dcf3a826501f7ce81f4",
+        "AM_T1_playlists/A_list_pop_DuaLipa_1x1.mp4.poster.webp": "2776e24cf4078fd80fb47e5bdb4e936e0e60b6e82b6951c1a2a0cc609cf40b65"
+      }
+    },
+    "AM_T1_playlists/Superbloom_GothBabe_1x1.mp4": {
+      "sourceSha256": "bb5e4d7f6ba8dc7401040b85b04558a789f9f3aa2b59cad216893239a8b85c54",
+      "outputs": {
+        "AM_T1_playlists/Superbloom_GothBabe_1x1.mp4": "da3d1a0bbeac54fee9f264db4b1c13406442e6ae7824b14295234f47f40b9d6c",
+        "AM_T1_playlists/Superbloom_GothBabe_1x1.mp4.poster.webp": "62e838d0aab6a6dfb026a3944f68114ba14790c3eec48a5a6a65a8460554b4f2"
+      }
+    },
+    "AM_T1_playlists/Todays_Country_1x1.mp4": {
+      "sourceSha256": "84bad314ed78a5a37c6381b0f2d5a9fd638c58932372d2b8719cfde5e5da5b97",
+      "outputs": {
+        "AM_T1_playlists/Todays_Country_1x1.mp4": "cfd6dafd07f1504dc7a08372dc783babc0a86121f5ba3f470603f47058f3b135",
+        "AM_T1_playlists/Todays_Country_1x1.mp4.poster.webp": "713d1f35d2c8ac2474395028ad837ace3d330d13cf60eeab7f858eb3c675aeb8"
+      }
+    },
+    "AM_T1_playlists/Rap_life_1x1.mp4": {
+      "sourceSha256": "162484c673ea98c4c39d58b5b4794edae1b36e5659105ff79cc3e3052f0930e9",
+      "outputs": {
+        "AM_T1_playlists/Rap_life_1x1.mp4": "fc97f9e4b3bac1ce90aa36fdd7f2085dce41e411a9cf243c923f3766e4bc8ce2",
+        "AM_T1_playlists/Rap_life_1x1.mp4.poster.webp": "147cb64b6b234a0d2efe3b4b3a9b9ddc155c684d22cc5bab3337e10b50832353"
+      }
+    },
+    "Single videos/Xbox 2030 vision.mp4": {
+      "sourceSha256": "91502c2ffb8ceb150f2903bf4d4858c729648adb451a2c51495b26bdc9f0760c",
+      "outputs": {
+        "Single videos/Xbox 2030 vision.mp4": "f1b24e2d3fffb0eb2d2f5c52e4a7e2cbf40303e6aee10194e0b4fd71e102bbd1",
+        "Single videos/Xbox 2030 vision.mp4.poster.webp": "e2ff970efeb560ea8da1ae4128d78362cc63ddd7372e09b57cb6eeeadab9e9b3"
+      }
+    },
+    "Single videos/Discord x Xbox.mp4": {
+      "sourceSha256": "5ac4cfe97c5177c70a20954eb962a1e10e1fe6a5b165d52ab91fc813201ebc27",
+      "outputs": {
+        "Single videos/Discord x Xbox.mp4": "510297dfdfb6b90ff053d28574e7cc993c3b0cc1b425f8e9f3d7ac4bb380b12f",
+        "Single videos/Discord x Xbox.mp4.poster.webp": "74530e03875bad578b873b2d32c64addd8cc9e0611bcb91063a5a07f4c1800c7"
+      }
+    },
+    "Single videos/Discord x Xbox - 2D.mp4": {
+      "sourceSha256": "a2afb6bfa7f1d53286b845b5f4e70e6e8ed5ce9ffdcb256604fb8c6e714861ed",
+      "outputs": {
+        "Single videos/Discord x Xbox - 2D.mp4": "7607d83db88875b9df6430738e42fa11fa9e8f95df7b8340c421e6018269147d",
+        "Single videos/Discord x Xbox - 2D.mp4.poster.webp": "b196a28e1c897c638238558e514ddc56c1f90428c5e8d03fb280c482101b4038"
+      }
+    },
+    "Xbox PC app/After Image 1.png.webp": {
+      "sourceSha256": "48d6931f1aa4f94adc72db111e81a861b48dc3e1c96be777144783243c09f0c9",
+      "outputs": {
+        "Xbox PC app/After Image 1.png.webp": "a2a4512dd73eade29167f77e3017990ca7de426ab840392bb9f5fd1c7a5c6139"
+      }
+    },
+    "Xbox PC app/Before 1.png.webp": {
+      "sourceSha256": "8c9d7ed91ce71eaa824bc9f5bf0a333da77209866bfa57e58de0eab9d36ee490",
+      "outputs": {
+        "Xbox PC app/Before 1.png.webp": "8f9fe67ecfbb859c5200a02803611f254530ccfb191427269693a391c35cab19"
+      }
+    },
+    "Xbox PC app/After image 2.png.webp": {
+      "sourceSha256": "9ba9815a695d39b53709f08a46f59164b914831895e8b36fa8d5ada77fb44345",
+      "outputs": {
+        "Xbox PC app/After image 2.png.webp": "67d0ce3da835775991d2f41e4eab53fa47af0a8bb64c29d4336fcabbaa661104"
+      }
+    },
+    "Xbox PC app/Befroe 2.png.webp": {
+      "sourceSha256": "8024d4737520cfb6e06f36a7eb82da3d4f8880faf5b44aceacef2fe983f24508",
+      "outputs": {
+        "Xbox PC app/Befroe 2.png.webp": "4da13fe966fc7af1965d9f353437c98a72c0c98718389e8d614186a820ed4f58"
+      }
+    },
+    "Xbox PC app/After Image 3.png.webp": {
+      "sourceSha256": "91dd7bf8692703c43c56cc94db66dae8204f8d2430f129a6c66c6a3b565ebaa1",
+      "outputs": {
+        "Xbox PC app/After Image 3.png.webp": "008f718148820abb9d278c4d357142f9df8eff458b9cb3e66d3ea0a894a4c678"
+      }
+    },
+    "Xbox PC app/Before 3.png.webp": {
+      "sourceSha256": "93706c4eb589cbc37f023c709a91adf0a70c2dd65ed49f35333b281b4a9588f6",
+      "outputs": {
+        "Xbox PC app/Before 3.png.webp": "5e7728a30982710f1f2d7615027519f6fd3a121d88fae7c404fd8c5e634ba8a8"
+      }
+    },
+    "Xbox PC app/After Image 4.png.webp": {
+      "sourceSha256": "22966b5dc6c89bdcff57a2406960d038ba832e6e64bfba9ee657c416e72af9fb",
+      "outputs": {
+        "Xbox PC app/After Image 4.png.webp": "41700de3ce437dc3e4f1d009b7c50e68c4f50e457d6dffc4e03a3dc4b7838269"
+      }
+    },
+    "AM_Spatial sound/Anitta_NYC.mp4": {
+      "sourceSha256": "2c6c39dfd768da467ba052bec25ffd8b91ad9143252887407210ecc0f01af94a",
+      "outputs": {
+        "AM_Spatial sound/Anitta_NYC.mp4": "ab648aa7ff0c9e23b132fdca80b1c339b5b5e0d852a10347d9bcb528776b6c10",
+        "AM_Spatial sound/Anitta_NYC.mp4.poster.webp": "a7d8221359f72b46db0272ba4719681234d27d24f2db50ea06906bdd1cec85ca"
+      }
+    },
+    "AM_Spatial sound/Zedd_Mobile.mp4": {
+      "sourceSha256": "de80a3984991a1be217304cfe7e20b1b74d9bcf789ce325a527f814f66794f54",
+      "outputs": {
+        "AM_Spatial sound/Zedd_Mobile.mp4": "d2c70a2c20612d47c103d1a97606ed6118332f6a7cd6a690ba2d68a395ad4d5e",
+        "AM_Spatial sound/Zedd_Mobile.mp4.poster.webp": "84e2614cbe937d01a30a2048a7567c59480f753dc279e28cc3b27c7d460c5e38"
+      }
+    },
+    "AM_Spatial sound/Zedd_NYC.mp4": {
+      "sourceSha256": "8b933de3b8779f26ad57d993289694e95109bae754712569e92d2be53a0f44e7",
+      "outputs": {
+        "AM_Spatial sound/Zedd_NYC.mp4": "c11bbf9948a5f74cc59d109d7a4b1016e40cfd23a314f5d9c79d8e963ff3afc0",
+        "AM_Spatial sound/Zedd_NYC.mp4.poster.webp": "37f04bf78b707f6b3e4954b076fc5877f3e515d40fdafa025f724f546fa39c7a"
+      }
+    },
+    "AM_T1_playlists/DXL_03.mp4": {
+      "sourceSha256": "0276d73038177396acec9ef4d51a1dbf465fffb74ef431abc7154d1d68a50d54",
+      "outputs": {
+        "AM_T1_playlists/DXL_03.mp4": "88ebc849b6d5ad0232fa61105dc519cd8836eca8714140fa4e0110166529e919",
+        "AM_T1_playlists/DXL_03.mp4.poster.webp": "560877e4b3a50520e87782ba7f3a4e926bb3d821de43a9225b42c661e1c1c28e",
+        "AM_T1_playlists/DXL_03.mp4.poster-6.webp": "49d0704f84c38863ae429332203dd2f489e47594f5b1fb298af5d0e078072a3e"
+      }
+    },
+    "AM_T1_playlists/DXL_04.mp4": {
+      "sourceSha256": "790472afc12499ca257f4f3833ab61b4ab3490df75984cb5d3bff8b692722519",
+      "outputs": {
+        "AM_T1_playlists/DXL_04.mp4": "8d239daf8fb918032a6ee6976dabc3a3f1220ec9e48a280ec49760050be3e2f6",
+        "AM_T1_playlists/DXL_04.mp4.poster.webp": "4935d2a427b75486cd4db1ada3535350fa08754270f8792864124d3a1e6273c1",
+        "AM_T1_playlists/DXL_04.mp4.poster-6.webp": "a294f5ace9307f222dc15a533bcb52e254111a1ec7c64e22a1d49d437971b29e"
+      }
+    },
+    "AM_T1_playlists/DXL_01.mp4": {
+      "sourceSha256": "f6a5b15528cb3175bd99802541f16ffd36d02cc58c17e5e83440e6aeeaeb8008",
+      "outputs": {
+        "AM_T1_playlists/DXL_01.mp4": "281e4438bafb8c96cb19c7a0cc3b2661cffa1684c6e18d142f3191f463a58b43",
+        "AM_T1_playlists/DXL_01.mp4.poster.webp": "f890bd57237f9fb3ed2d8934f0d28f94323b29a96157a56fe8f2a800e2dab068",
+        "AM_T1_playlists/DXL_01.mp4.poster-6.webp": "e343351d1e4099ef3c9ed713a8af135183d109c7751e9370188f24f3a3598bb6"
+      }
+    },
+    "AM_T1_playlists/NMD_03.mp4": {
+      "sourceSha256": "222addf318d9f0e13793a79e3c5e49f83622fcf32549e1a0b0447122d16f79d7",
+      "outputs": {
+        "AM_T1_playlists/NMD_03.mp4": "f3992e20ac7d1df9d9db88f4a8a6d406f4e6e09af46822c8b2448d0884240dc1",
+        "AM_T1_playlists/NMD_03.mp4.poster.webp": "ef47ea8a45895fd777f11bc3e0df0bb1dc074d45e5a95cca49b9624ac408e9c7",
+        "AM_T1_playlists/NMD_03.mp4.poster-6.webp": "f9f3dba26bd8e490bff31c418b6363c4eb955ce4c1aa787a04b2ade9c3b4bb32"
+      }
+    },
+    "Desktop images/Beyonce_NewAlbum_2x3.mp4": {
+      "sourceSha256": "15b7f0a79adf46526e92ae87d1d45297bcc475a94272bc0da8782cf1995cdeda",
+      "outputs": {
+        "Desktop images/Beyonce_NewAlbum_2x3.mp4": "c102db317b05412b40d56fc7983fbe35bc9194739bcbcf5941603b1a9d436e25",
+        "Desktop images/Beyonce_NewAlbum_2x3.mp4.poster.webp": "58500dd7e01b9fb1de3c325632922d0487df70029537a53f72e7da647d81ba6e"
+      }
+    },
+    "Beyonce/Beyonce_Youtube_10s.mp4": {
+      "sourceSha256": "6873c0ce3286058a4a13ff396511661cefd1fb9765484c6bc2e7f02681fede9b",
+      "outputs": {
+        "Beyonce/Beyonce_Youtube_10s.mp4": "c9642046a6fcebc78a85df3269eaeff01438b6375b7ae375ba706b6b2552e1bb",
+        "Beyonce/Beyonce_Youtube_10s.mp4.poster.webp": "5b9cd5edd24124aabf516247b96cba00f02116c3b19baa2fe0afbeb3fd61a43c"
+      }
+    },
+    "Beyonce/Beyonce_tiktok_10s.mp4": {
+      "sourceSha256": "7532116c493f4ce1a7c89f84f77a13fcb6202b30c172ff8f4415232a5158c591",
+      "outputs": {
+        "Beyonce/Beyonce_tiktok_10s.mp4": "9e7f5e56896a659bc997b074acc16ec046f4ba846f4bc805167e01363222f797",
+        "Beyonce/Beyonce_tiktok_10s.mp4.poster.webp": "39c73538c9a460f9f5b16951f193503a117fdedf1e184aa70a111d814a3a24ab"
+      }
+    },
+    "Beyonce/Beyonce_mobile_10s.mp4": {
+      "sourceSha256": "c6b05a217aa0abdc8e42e7d704eee351ed3e5f8f8a00d8c2b3e00b6e050efa71",
+      "outputs": {
+        "Beyonce/Beyonce_mobile_10s.mp4": "73546e555ee5cf8adcc5ecf2e3dea7f007924591e003d764245c6084f428b915",
+        "Beyonce/Beyonce_mobile_10s.mp4.poster.webp": "35516ee0b9ff9ff13af1dc0c989230c731c5eba09d9a5a42c67102759301763e"
+      }
+    },
+    "Desktop images/Hulu_upHere_16x9.mp4": {
+      "sourceSha256": "6f484c0d80189f8bb2e75d5fe8f5dd214785fccc75389cd0d406f2509e1d7089",
+      "outputs": {
+        "Desktop images/Hulu_upHere_16x9.mp4": "8959aaab62d7e222d79919fedf941848cbf6c54762a6eee6206c7f2fb22cfe5a",
+        "Desktop images/Hulu_upHere_16x9.mp4.poster.webp": "1960ee3bbee5f40716a38b2bf906e42b1c74848c19a334cec2218ae856a90bf9"
+      }
+    },
+    "Desktop images/HBO_max_heavensGate.png.webp": {
+      "sourceSha256": "df67f87ed239c928f99ed8ebf4cccadd615fa0cbf62b670ddde9c5710fc3e550",
+      "outputs": {
+        "Desktop images/HBO_max_heavensGate.png.webp": "5574ef4e984968ddd9759b0b6519e7573abe8d5e4bbf798bd69abf55a59fa2b4"
+      }
+    },
+    "Apple TV Baseball/Video1.mp4": {
+      "sourceSha256": "f4405ee7fa36b864bcfb4ae5cdb8308f4247ca9af98a8d533a73b1b83c207c6c",
+      "outputs": {
+        "Apple TV Baseball/Video1.mp4": "a5d2c5b8b83bd6ab1056bb785174cc18f338a18430ba02f5ed936d78bf4a91b0",
+        "Apple TV Baseball/Video1.mp4.poster.webp": "9e6fba91941d4ca9a3d60d74a7d2d95c6e9cc21c095b4078d4f021c501d8021e"
+      }
+    },
+    "Apple TV Baseball/Video2.mp4": {
+      "sourceSha256": "f45c1500202b4ba3cee2d3fc13f8eaa2933877cd4a804c65a45f9bf1ef1f1839",
+      "outputs": {
+        "Apple TV Baseball/Video2.mp4": "474b742060dddec24658bc76131780dcda6d632fd44026591875d1b7a11bcd37",
+        "Apple TV Baseball/Video2.mp4.poster.webp": "c7a14f011051595a08772e8b2016da39332b76ede3e0f7ee1962c5dfc305c2bd"
+      }
+    },
+    "Desktop images/EltonJohn_radio_1x1.png.webp": {
+      "sourceSha256": "4725231a4ce643ed83fa8fb748941ad7a289ea9b7878bc05fe83541b5fac3029",
+      "outputs": {
+        "Desktop images/EltonJohn_radio_1x1.png.webp": "8680c15a02a4297085b74c4a80d844d880d79416f8ced34eac4de55c282528f4"
+      }
+    },
+    "Elton John Radio Show/1.png.webp": {
+      "sourceSha256": "4725231a4ce643ed83fa8fb748941ad7a289ea9b7878bc05fe83541b5fac3029",
+      "outputs": {
+        "Elton John Radio Show/1.png.webp": "8680c15a02a4297085b74c4a80d844d880d79416f8ced34eac4de55c282528f4"
+      }
+    },
+    "Elton John Radio Show/3.png.webp": {
+      "sourceSha256": "52defa42caad116c3de2a0b149999c2f189480ddd55054108b66e33d5700a6eb",
+      "outputs": {
+        "Elton John Radio Show/3.png.webp": "bceb7d59607edd784835c431e8b9baf31426604271a3c8473926cb9ee49c079c"
+      }
+    },
+    "Elton John Radio Show/4.png.webp": {
+      "sourceSha256": "78aae5a178c316da58769de2fc2a833ae5b4b5ac9af3aadb9db274f3a75c37a3",
+      "outputs": {
+        "Elton John Radio Show/4.png.webp": "992cf88a1d45de8912263aab9b1e8b0aa6363afb47f7a65f59d5b38402b0daa4"
+      }
+    },
+    "Elton John Radio Show/2.mp4": {
+      "sourceSha256": "44ac394ece7c202274a1f5d0a80c085756dbd8acf65f47a5a63fb82414829f73",
+      "outputs": {
+        "Elton John Radio Show/2.mp4": "08750160cbda76417289deb604feebaa00d09759b4ac7340aa577497b790363b",
+        "Elton John Radio Show/2.mp4.poster.webp": "105e94928d2866468c48d13f807c1b92878124b971962fcaa8ff486e1a388b40"
+      }
+    }
+  }
+}

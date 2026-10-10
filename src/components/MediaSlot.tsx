@@ -4,10 +4,12 @@ import { navigatePortfolio, portfolioRouteChangeEvent } from "../portfolioRoutin
 import { extraSmallViewportQuery } from "../breakpoints";
 import { DetailPageTransition } from "./DetailPageTransition";
 import { useVideoControlsVisibility } from "./useVideoControlsVisibility";
+import { useDetailVideoLoading } from "./useDetailVideoLoading";
 import { isVideoFullscreen, observeVideoFullscreen } from "./videoFullscreen";
 import { TagComponent } from "./tag_component";
 import { imageMetadata, videoMetadata } from "../video-metadata.generated";
 import { NavigationSpecificationsTable, type NavigationSpecification } from "./NavigationSpecificationsTable";
+import { DetailDescription } from "./DetailDescription";
 
 const mediaVolumeChangeEventKey = "portfolio-media-volume-change";
 const audioFadeStartVolume = 0.01;
@@ -38,6 +40,9 @@ function saveMediaVolumePreferences(preferences: MediaVolumePreferences) {
 export type MediaSlotData = {
   detailSlug?: string;
   externalHref?: string;
+  externalMessage?: string;
+  externalMessageFollowsTags?: boolean;
+  externalLinkLabel?: string;
   id: string;
   ratio: "1:1" | "16:9" | "2:3";
   layer: 1 | 2 | 3;
@@ -63,10 +68,14 @@ export type MediaSlotData = {
 };
 
 export type ExpandedMediaAsset = {
+  /** Describes visible image content; omitted descriptions retain legacy labels. */
+  alt?: string;
   bordered?: boolean;
   caption?: string;
   specifications?: NavigationSpecification[];
   initialTime?: number;
+  playbackStartTime?: number;
+  prefetchInitialRange?: boolean;
   source: string;
   type: "image" | "video";
 };
@@ -323,7 +332,10 @@ function ExpandedImage({
 
 type ExpandedVideoProps = {
   autoPlay: boolean;
+  bordered?: boolean;
   initialTime?: number;
+  playbackStartTime?: number;
+  prefetchInitialRange?: boolean;
   label: string;
   slotId: string;
   source: string;
@@ -331,7 +343,10 @@ type ExpandedVideoProps = {
 
 function ExpandedVideo({
   autoPlay,
+  bordered = false,
   initialTime = 0,
+  playbackStartTime = 0,
+  prefetchInitialRange = false,
   label,
   slotId,
   source,
@@ -339,12 +354,13 @@ function ExpandedVideo({
   const videoRef = useRef<HTMLVideoElement>(null);
   const dimensions = videoMetadata[source];
   const controlsVisibility = useVideoControlsVisibility(videoRef);
-  const [sourceReady, setSourceReady] = useState(autoPlay);
-  const [nearViewport, setNearViewport] = useState(autoPlay);
+  const loading = useDetailVideoLoading(videoRef, autoPlay,
+    prefetchInitialRange && !autoPlay ? source : undefined);
+  const { reportPlayError } = loading;
   const audioFadeFrameRef = useRef<number | undefined>(undefined);
+  const initialAudioFadeAllowedRef = useRef(autoPlay);
   const hasUserAdjustedVolumeRef = useRef(false);
   const isApplyingSharedVolumeRef = useRef(false);
-  const shouldRestartOnFirstPlayRef = useRef(initialTime > 0);
   const initializeVideo = useCallback((video: HTMLVideoElement | null) => {
     videoRef.current = video;
     if (!video) return;
@@ -357,23 +373,6 @@ function ExpandedVideo({
       : preferences.volume;
     video.muted = preferences.muted;
   }, [autoPlay]);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setNearViewport(entry.isIntersecting);
-        if (entry.isIntersecting) setSourceReady(true);
-      },
-      {
-        root: video.closest<HTMLElement>(".detail-page-transition-backdrop"),
-        rootMargin: "300px 0px",
-      },
-    );
-    observer.observe(video);
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -396,6 +395,7 @@ function ExpandedVideo({
     const playInitialVideo = () => {
       video.play()
         .then(() => {
+          initialAudioFadeAllowedRef.current = false;
           if (hasUserAdjustedVolumeRef.current) return;
 
           isApplyingSharedVolumeRef.current = true;
@@ -413,9 +413,18 @@ function ExpandedVideo({
           audioFadeFrameRef.current = requestAnimationFrame(fadeIn);
         })
         .catch((error: unknown) => {
-          // Navigation, visibility changes and another player can cancel play().
+          reportPlayError(error);
           if (error instanceof DOMException && error.name === "AbortError") return;
-          console.error(`Unable to play expanded video in slot ${slotId}.`, error);
+          // If audible autoplay is blocked (or loading fails), a later manual
+          // Play/Retry must not remain at the fade's near-silent starting volume.
+          initialAudioFadeAllowedRef.current = false;
+          if (!hasUserAdjustedVolumeRef.current) {
+            isApplyingSharedVolumeRef.current = true;
+            video.volume = loadMediaVolumePreferences().volume;
+            requestAnimationFrame(() => {
+              isApplyingSharedVolumeRef.current = false;
+            });
+          }
         });
     };
 
@@ -456,11 +465,12 @@ function ExpandedVideo({
       observer.observe(video);
     });
     const handlePlay = () => {
-      if (shouldRestartOnFirstPlayRef.current) {
-        shouldRestartOnFirstPlayRef.current = false;
-        video.currentTime = 0;
+      if (Array.from(document.querySelectorAll("video")).some(
+        (other) => other !== video && isVideoFullscreen(other),
+      )) {
+        video.pause();
+        return;
       }
-
       const previousVideo = activeExpandedVideo;
       activeExpandedVideo = video;
       if (previousVideo && previousVideo !== video) {
@@ -469,6 +479,11 @@ function ExpandedVideo({
 
       if (visibleRatio !== null) {
         pauseIfMostlyOutsideViewport(visibleRatio);
+      }
+      // Keep the poster visible before Play; seek only when playback starts.
+      // Resuming or seeking elsewhere must not reset the player's position.
+      if (!video.paused && playbackStartTime > 0 && video.currentTime < 0.05) {
+        video.currentTime = playbackStartTime;
       }
     };
     const handlePause = () => {
@@ -501,7 +516,7 @@ function ExpandedVideo({
       }
       video.pause();
     };
-  }, [autoPlay, slotId, source]);
+  }, [autoPlay, slotId, source, playbackStartTime, reportPlayError]);
 
   const beginManualVolumeAdjustment = () => {
     hasUserAdjustedVolumeRef.current = true;
@@ -513,18 +528,22 @@ function ExpandedVideo({
   };
 
   return (
+    <div
+      className={`expanded-media-video-frame${bordered ? " is-bordered" : ""}`}
+      data-detail-page-content
+    >
       <video
         ref={initializeVideo}
         data-detail-page-content
-        src={sourceReady ? source : undefined}
-        poster={sourceReady ? dimensions?.poster : undefined}
+        src={loading.sourceReady ? source : undefined}
+        poster={dimensions?.restPosters?.[initialTime] ?? dimensions?.poster}
         width={dimensions?.width}
         height={dimensions?.height}
         style={dimensions ? { aspectRatio: `${dimensions.width} / ${dimensions.height}` } : undefined}
         loop
         playsInline
         disablePictureInPicture
-        preload={sourceReady && nearViewport ? "auto" : "none"}
+        preload={loading.preload}
         {...controlsVisibility}
         controlsList="nodownload"
         tabIndex={0}
@@ -532,14 +551,15 @@ function ExpandedVideo({
         onLoadedMetadata={(event) => {
           const video = event.currentTarget;
           const preferences = loadMediaVolumePreferences();
-          video.currentTime = initialTime;
-          shouldRestartOnFirstPlayRef.current = initialTime > 0;
+          // The resting frame is a small poster, not a seek into the movie.
+          // Playback now starts at zero without downloading six seconds first.
+          loading.markMetadata();
           isApplyingSharedVolumeRef.current = true;
-          video.volume = autoPlay
+          video.volume = initialAudioFadeAllowedRef.current && !hasUserAdjustedVolumeRef.current
             ? Math.min(audioFadeStartVolume, preferences.volume)
             : preferences.volume;
           video.muted = preferences.muted;
-          if (!autoPlay) {
+          if (!initialAudioFadeAllowedRef.current || hasUserAdjustedVolumeRef.current) {
             requestAnimationFrame(() => {
               isApplyingSharedVolumeRef.current = false;
             });
@@ -547,7 +567,16 @@ function ExpandedVideo({
         }}
         onPointerDownCapture={beginManualVolumeAdjustment}
         onKeyDownCapture={beginManualVolumeAdjustment}
-        onError={() => console.error(`Unable to load expanded media in slot ${slotId}: ${source}`)}
+        onPlay={loading.markPlay}
+        onPause={loading.markPause}
+        onCanPlay={loading.markReady}
+        onPlaying={loading.markReady}
+        onWaiting={loading.markWaiting}
+        onStalled={loading.markWaiting}
+        onError={() => {
+          loading.markError();
+          console.warn(`Unable to load expanded media in slot ${slotId}: ${source}`);
+        }}
         onVolumeChange={(event) => {
           if (isApplyingSharedVolumeRef.current) return;
           saveMediaVolumePreferences({
@@ -556,6 +585,20 @@ function ExpandedVideo({
           });
         }}
       />
+      <div className="expanded-video-feedback" role="status" aria-live="polite" aria-atomic="true">
+        {loading.feedback && (
+          <div className="expanded-video-feedback-message">
+            <span>{loading.feedback}</span>
+            {loading.canRetry && (
+              <button type="button" aria-label={`Retry loading ${label}`} onClick={(event) => {
+                event.stopPropagation();
+                loading.retry();
+              }}>Retry</button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -573,12 +616,15 @@ function isExpandedMediaGroup(item: ExpandedMediaItem): item is ExpandedMediaGro
 
 export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
   const detailHash = slot.detailSlug ? `#/desktop/${slot.detailSlug}` : undefined;
+  const tagDescriptionId = `project-tags-${slot.id}`;
   const articleRef = useRef<HTMLElement>(null);
+  const detailOpenTriggerRef = useRef<HTMLElement | null>(null);
   const tagOverlayRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hoverIntentTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const externalHoverDismissedRef = useRef(false);
   const pointerFocusRef = useRef(false);
+  const suppressNextFocusInteractionRef = useRef(false);
   const [isExpanded, setIsExpanded] = useState(
     () => Boolean(detailHash && window.location.hash === detailHash),
   );
@@ -725,6 +771,9 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
   const playVideo = () => {
     if (!videoRef.current) return;
     const video = videoRef.current;
+    // Retained sources keep their failure state after a temporary loading error.
+    // Retry once on the next hover without discarding healthy playback buffers.
+    if (video.error) video.load();
     video.play().then(() => {
       if (videoRef.current === video && !video.paused) setIsHoverVideoReady(true);
     }).catch((error: unknown) => {
@@ -875,13 +924,14 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
     };
   }, [canExpand, detailHash]);
 
-  const openExpandedMedia = () => {
+  const openExpandedMedia = (triggerTarget?: HTMLElement) => {
     clearHoverInteraction();
     if (!detailHash) {
       console.error(`Missing detail route for expandable slot ${slot.id}.`);
       return;
     }
 
+    if (triggerTarget) detailOpenTriggerRef.current = triggerTarget;
     setDisableExitMotion(false);
     if (window.location.hash !== detailHash) {
       navigatePortfolio(detailHash, {
@@ -890,7 +940,7 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
     }
     setIsExpanded(true);
   };
-  const closeExpandedMedia = () => {
+  const closeExpandedMedia = useCallback(() => {
     if (
       detailHash
       && window.location.hash === detailHash
@@ -904,7 +954,18 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
       navigatePortfolio("#/desktop", { replace: true });
     }
     setIsExpanded(false);
+  }, [detailHash]);
+  const restoreDetailTriggerFocus = () => {
+    const target = detailOpenTriggerRef.current ?? articleRef.current;
+    if (!target?.isConnected) return;
+
+    suppressNextFocusInteractionRef.current = true;
+    target.focus({ preventScroll: true });
+    if (document.activeElement !== target) {
+      suppressNextFocusInteractionRef.current = false;
+    }
   };
+  const detailTitleId = slot.expandedTitle ? `detail-title-${slot.id}` : undefined;
 
   return (
     <>
@@ -947,6 +1008,10 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
           if (event.pointerType !== "mouse") clearHoverInteraction();
         }}
         onFocus={(event) => {
+          if (suppressNextFocusInteractionRef.current) {
+            suppressNextFocusInteractionRef.current = false;
+            return;
+          }
           if (pointerFocusRef.current || !event.currentTarget.matches(":focus-visible")) return;
           if (event.relatedTarget) externalHoverDismissedRef.current = false;
           cancelHoverIntent();
@@ -958,22 +1023,27 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
           setIsHoverActive(false);
           if (slot.videoSrc || slot.hoverVideoSrc) resetVideo();
         }}
-        onClick={slot.externalHref ? openExternalLink : canExpand ? openExpandedMedia : undefined}
+        onClick={slot.externalHref
+          ? openExternalLink
+          : canExpand
+            ? (event) => openExpandedMedia(event.currentTarget)
+            : undefined}
         onKeyDown={
           canExpand
             ? (event) => {
                 if (event.key === "Enter" || event.key === " ") {
                   event.preventDefault();
-                  openExpandedMedia();
+                  openExpandedMedia(event.currentTarget);
                 }
               }
             : undefined
         }
         role={canExpand ? "button" : undefined}
         tabIndex={isClickable ? 0 : undefined}
-        aria-label={slot.externalHref ? `View ${slot.projectLabel} on Instagram (opens in a new tab)` : canExpand ? `Open ${expandedLabel}` : undefined}
+        aria-label={slot.externalHref ? (slot.externalLinkLabel ?? `View ${slot.projectLabel} on Instagram (opens in a new tab)`) : canExpand ? `Open ${expandedLabel}` : undefined}
+        aria-describedby={isClickable && slot.projectTags.length ? tagDescriptionId : undefined}
       >
-        <div className={`media-visual${hasHoverVideoCrossfade ? " has-hover-video" : ""}${slot.externalHref ? " has-external-link" : ""}`}>
+        <div aria-hidden={isClickable ? true : undefined} className={`media-visual${hasHoverVideoCrossfade ? " has-hover-video" : ""}${slot.externalHref ? " has-external-link" : ""}`}>
           {hasHoverVideoCrossfade ? (
             <>
               <img
@@ -1024,11 +1094,22 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
           )}
           {slot.externalHref && (
             <div className="external-project-notice" aria-hidden={!isHoverActive}>
-              This project will open Instagram
+              {slot.externalMessageFollowsTags
+                ? isHoverActive && tagPosition && (
+                  <span className="external-project-message">
+                    {slot.externalMessage ?? "This project will open Instagram"}
+                  </span>
+                )
+                : slot.externalMessage ?? "This project will open Instagram"}
             </div>
           )}
         </div>
       </SlotElement>
+      {isClickable && slot.projectTags.length > 0 && (
+        <span id={tagDescriptionId} hidden>
+          Project tags: {slot.projectTags.join(", ")}
+        </span>
+      )}
       {isHoverActive &&
         tagPosition &&
         createPortal(
@@ -1054,14 +1135,18 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
           disableExitMotion={disableExitMotion}
           isOpen={isExpanded}
           label={expandedLabel}
+          labelledBy={detailTitleId}
           onClose={closeExpandedMedia}
+          restoreFocus={restoreDetailTriggerFocus}
           className="expanded-media"
         >
           {slot.expandedTitle && (
             <div className="expanded-media-copy" data-detail-page-content data-detail-slug={slot.detailSlug}>
-              <h2 className="display">{slot.expandedTitle}</h2>
-              {slot.expandedSubtitleLines?.map((line) => <p className="body" key={line}>{line.replace(/\.\s*$/, "")}</p>)}
-              {slot.alternateExpandedSubtitleLines?.map((line) => <p className="body" key={line}>{line.replace(/\.\s*$/, "")}</p>)}
+              <h2 className="display" id={detailTitleId}>{slot.expandedTitle}</h2>
+              <DetailDescription
+                lines={slot.expandedSubtitleLines}
+                alternateLines={slot.alternateExpandedSubtitleLines}
+              />
             </div>
           )}
           <div className="expanded-media-stream" data-detail-slug={slot.detailSlug}>
@@ -1090,7 +1175,10 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
                       asset.type === "video" ? (
                         <ExpandedVideo
                           autoPlay={asset.source === firstExpandedVideoSource}
+                          bordered={asset.bordered}
                           initialTime={asset.initialTime}
+                          playbackStartTime={asset.playbackStartTime}
+                          prefetchInitialRange={asset.prefetchInitialRange}
                           source={asset.source}
                           label={`${expandedLabel}, item ${itemIndex + 1}, video ${mediaIndex + 1} of ${mediaItem.assets.length}`}
                           slotId={slot.id}
@@ -1103,7 +1191,7 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
                           caption={asset.caption}
                           specifications={asset.specifications}
                           source={asset.source}
-                          alt={`${expandedLabel}, item ${itemIndex + 1}, image ${mediaIndex + 1} of ${mediaItem.assets.length}`}
+                          alt={asset.alt?.trim() || `${expandedLabel}, item ${itemIndex + 1}, image ${mediaIndex + 1} of ${mediaItem.assets.length}`}
                           onLoad={() => undefined}
                           onError={() => console.error(`Unable to load expanded media in slot ${slot.id}: ${asset.source}`)}
                           key={asset.source}
@@ -1114,7 +1202,10 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
                 ) : mediaItem.type === "video" ? (
                   <ExpandedVideo
                     autoPlay={mediaItem.source === firstExpandedVideoSource}
+                    bordered={mediaItem.bordered}
                     initialTime={mediaItem.initialTime}
+                    playbackStartTime={mediaItem.playbackStartTime}
+                    prefetchInitialRange={mediaItem.prefetchInitialRange}
                     source={mediaItem.source}
                     label={`${expandedLabel}, video ${itemIndex + 1} of ${expandedMediaItems.length}`}
                     slotId={slot.id}
@@ -1125,7 +1216,7 @@ export function MediaSlot({ closeDetailRequest, slot }: MediaSlotProps) {
                     caption={mediaItem.caption}
                     specifications={mediaItem.specifications}
                     source={mediaItem.source}
-                    alt={`${expandedLabel} ${itemIndex + 1} of ${expandedMediaItems.length}`}
+                    alt={mediaItem.alt?.trim() || `${expandedLabel} ${itemIndex + 1} of ${expandedMediaItems.length}`}
                     onLoad={() => undefined}
                     onError={() => console.error(`Unable to load expanded media in slot ${slot.id}: ${mediaItem.source}`)}
                   />

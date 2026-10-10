@@ -39,6 +39,10 @@ export default function App() {
     } else {
       delete document.documentElement.dataset.theme;
     }
+    const backgroundColor = getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-main-1").trim();
+    document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+      ?.setAttribute("content", backgroundColor);
   }, [isThemeInverted]);
 
   if (isLandscapeScreenBlocked) {

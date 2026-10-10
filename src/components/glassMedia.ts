@@ -3,6 +3,8 @@ export type GlassMedia = {
   media: HTMLImageElement | HTMLVideoElement;
   bounds: DOMRect;
   fit: string;
+  poster?: HTMLImageElement;
+  posterVisible?: boolean;
   frameCallback: number | null;
   fallbackTime: number;
   dispose: () => void;
@@ -17,10 +19,16 @@ export function drawGlassMedia(
   captureTop: number,
 ) {
   const { media, bounds, fit } = entry;
-  const isImage = media instanceof HTMLImageElement;
-  if (isImage ? !media.complete : media.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
-  const sourceWidth = isImage ? media.naturalWidth : media.videoWidth;
-  const sourceHeight = isImage ? media.naturalHeight : media.videoHeight;
+  // Idle metadata-only players display their poster, not a decoded frame.
+  // Capture that same still instead of leaving a hole in the glass texture.
+  const drawable = media instanceof HTMLVideoElement
+    && (entry.posterVisible || media.readyState < HTMLMediaElement.HAVE_CURRENT_DATA)
+    ? entry.poster : media;
+  if (!drawable) return;
+  const isImage = drawable instanceof HTMLImageElement;
+  if (isImage ? !drawable.complete : drawable.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
+  const sourceWidth = isImage ? drawable.naturalWidth : drawable.videoWidth;
+  const sourceHeight = isImage ? drawable.naturalHeight : drawable.videoHeight;
   if (!sourceWidth || !sourceHeight || !bounds.width || !bounds.height) return;
   const destinationRatio = bounds.width / bounds.height;
   const sourceRatio = sourceWidth / sourceHeight;
@@ -52,6 +60,6 @@ export function drawGlassMedia(
   context.beginPath();
   context.rect(bounds.left, top - captureTop, bounds.width, bounds.height);
   context.clip();
-  context.drawImage(media, destinationX, destinationY, destinationWidth, destinationHeight);
+  context.drawImage(drawable, destinationX, destinationY, destinationWidth, destinationHeight);
   context.restore();
 }

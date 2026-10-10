@@ -12,6 +12,28 @@ import operaVideo from "../delivery-media/Desktop images/5_Opera_1x1.mp4";
 import operaVideoPoster from "../delivery-media/Desktop images/5_Opera_1x1.mp4.poster.webp";
 import operaRestImage from "../delivery-media/Desktop images/5_Opera_1x1_image.jpg.webp";
 import weekndImage from "../delivery-media/Desktop images/MM_weekend_noLogo.png.webp";
+import beyonceVideo from "../delivery-media/Desktop images/Beyonce_NewAlbum_2x3.mp4";
+import beyonceVideoPoster from "../delivery-media/Desktop images/Beyonce_NewAlbum_2x3.mp4.poster.webp";
+import beyonceYoutubeVideo from "../delivery-media/Beyonce/Beyonce_Youtube_10s.mp4";
+import beyonceYoutubeVideoPoster from "../delivery-media/Beyonce/Beyonce_Youtube_10s.mp4.poster.webp";
+import beyonceTiktokVideo from "../delivery-media/Beyonce/Beyonce_tiktok_10s.mp4";
+import beyonceTiktokVideoPoster from "../delivery-media/Beyonce/Beyonce_tiktok_10s.mp4.poster.webp";
+import beyonceMobileVideo from "../delivery-media/Beyonce/Beyonce_mobile_10s.mp4";
+import beyonceMobileVideoPoster from "../delivery-media/Beyonce/Beyonce_mobile_10s.mp4.poster.webp";
+import huluUpHereVideo from "../delivery-media/Desktop images/Hulu_upHere_16x9.mp4";
+import huluUpHereVideoPoster from "../delivery-media/Desktop images/Hulu_upHere_16x9.mp4.poster.webp";
+import hboMaxImage from "../delivery-media/Desktop images/HBO_max_heavensGate.png.webp";
+import appleTvBaseballVideo1 from "../delivery-media/Apple TV Baseball/Video1.mp4";
+import appleTvBaseballVideo1Poster from "../delivery-media/Apple TV Baseball/Video1.mp4.poster.webp";
+import appleTvBaseballVideo2 from "../delivery-media/Apple TV Baseball/Video2.mp4";
+import appleTvBaseballVideo2Poster from "../delivery-media/Apple TV Baseball/Video2.mp4.poster.webp";
+import eltonJohnRestImage from "../delivery-media/Desktop images/EltonJohn_radio_1x1.png.webp";
+import eltonJohnImage1 from "../delivery-media/Elton John Radio Show/1.png.webp";
+import eltonJohnVideo2 from "../delivery-media/Elton John Radio Show/2.mp4";
+import eltonJohnVideo2Poster from "../delivery-media/Elton John Radio Show/2.mp4.poster.webp";
+import eltonJohnVideo2Rest9 from "../delivery-media/Elton John Radio Show/2.mp4.poster-9.webp";
+import eltonJohnImage3 from "../delivery-media/Elton John Radio Show/3.png.webp";
+import eltonJohnImage4 from "../delivery-media/Elton John Radio Show/4.png.webp";
 import xboxPcRedesignVideo from "../delivery-media/Desktop images/Xbox_PC_Redesign_16x9.mp4";
 import xboxPcRedesignVideoPoster from "../delivery-media/Desktop images/Xbox_PC_Redesign_16x9.mp4.poster.webp";
 import xboxCopilotVideo from "../delivery-media/Desktop images/Xbox_copilot_16x9.mp4";
@@ -72,8 +94,10 @@ import dalePlayRosaliaDetailVideo from "../delivery-media/AM_T1_playlists/Dale-p
 import dalePlayRosaliaDetailVideoPoster from "../delivery-media/AM_T1_playlists/Dale-play-rosalia_21x9.mp4.poster.webp";
 import dxl03Video from "../delivery-media/AM_T1_playlists/DXL_03.mp4";
 import dxl03VideoPoster from "../delivery-media/AM_T1_playlists/DXL_03.mp4.poster.webp";
+import dxl03VideoRest6 from "../delivery-media/AM_T1_playlists/DXL_03.mp4.poster-6.webp";
 import dxl04Video from "../delivery-media/AM_T1_playlists/DXL_04.mp4";
 import dxl04VideoPoster from "../delivery-media/AM_T1_playlists/DXL_04.mp4.poster.webp";
+import dxl04VideoRest6 from "../delivery-media/AM_T1_playlists/DXL_04.mp4.poster-6.webp";
 import aListPopDuaLipaVideo from "../delivery-media/AM_T1_playlists/A_list_pop_DuaLipa_1x1.mp4";
 import aListPopDuaLipaVideoPoster from "../delivery-media/AM_T1_playlists/A_list_pop_DuaLipa_1x1.mp4.poster.webp";
 import superbloomGothBabeVideo from "../delivery-media/AM_T1_playlists/Superbloom_GothBabe_1x1.mp4";
@@ -84,8 +108,10 @@ import rapLifeVideo from "../delivery-media/AM_T1_playlists/Rap_life_1x1.mp4";
 import rapLifeVideoPoster from "../delivery-media/AM_T1_playlists/Rap_life_1x1.mp4.poster.webp";
 import dxl01Video from "../delivery-media/AM_T1_playlists/DXL_01.mp4";
 import dxl01VideoPoster from "../delivery-media/AM_T1_playlists/DXL_01.mp4.poster.webp";
+import dxl01VideoRest6 from "../delivery-media/AM_T1_playlists/DXL_01.mp4.poster-6.webp";
 import nmd03Video from "../delivery-media/AM_T1_playlists/NMD_03.mp4";
 import nmd03VideoPoster from "../delivery-media/AM_T1_playlists/NMD_03.mp4.poster.webp";
+import nmd03VideoRest6 from "../delivery-media/AM_T1_playlists/NMD_03.mp4.poster-6.webp";
 import xbox2030DetailVideo from "../delivery-media/Single videos/Xbox 2030 vision.mp4";
 import xbox2030DetailVideoPoster from "../delivery-media/Single videos/Xbox 2030 vision.mp4.poster.webp";
 import xboxDiscordDetailVideo from "../delivery-media/Single videos/Discord x Xbox.mp4";
@@ -106,12 +132,20 @@ import zeddMobileVideoPoster from "../delivery-media/AM_Spatial sound/Zedd_Mobil
 import zeddNycVideo from "../delivery-media/AM_Spatial sound/Zedd_NYC.mp4";
 import zeddNycVideoPoster from "../delivery-media/AM_Spatial sound/Zedd_NYC.mp4.poster.webp";
 
-export const videoMetadata: Record<string, { poster: string; width: number; height: number }> = {
+export const videoMetadata: Record<string, { poster: string; width: number; height: number; restPosters?: Record<number, string> }> = {
   [spatialSoundVideo]: { poster: spatialSoundVideoPoster, width: 500, height: 500 },
   [xboxDiscordVideo]: { poster: xboxDiscordVideoPoster, width: 500, height: 500 },
   [xbox2030VisionVideo]: { poster: xbox2030VisionVideoPoster, width: 960, height: 540 },
   [gettyVideo]: { poster: gettyVideoPoster, width: 640, height: 960 },
   [operaVideo]: { poster: operaVideoPoster, width: 960, height: 960 },
+  [beyonceVideo]: { poster: beyonceVideoPoster, width: 640, height: 960 },
+  [beyonceYoutubeVideo]: { poster: beyonceYoutubeVideoPoster, width: 1920, height: 1080 },
+  [beyonceTiktokVideo]: { poster: beyonceTiktokVideoPoster, width: 1080, height: 1920 },
+  [beyonceMobileVideo]: { poster: beyonceMobileVideoPoster, width: 1080, height: 1920 },
+  [huluUpHereVideo]: { poster: huluUpHereVideoPoster, width: 960, height: 540 },
+  [appleTvBaseballVideo1]: { poster: appleTvBaseballVideo1Poster, width: 1920, height: 1242 },
+  [appleTvBaseballVideo2]: { poster: appleTvBaseballVideo2Poster, width: 1920, height: 1242 },
+  [eltonJohnVideo2]: { poster: eltonJohnVideo2Poster, width: 1080, height: 1080, restPosters: { 9: eltonJohnVideo2Rest9 } },
   [xboxPcRedesignVideo]: { poster: xboxPcRedesignVideoPoster, width: 960, height: 540 },
   [xboxCopilotVideo]: { poster: xboxCopilotVideoPoster, width: 960, height: 540 },
   [xboxCopilotDetailVideo]: { poster: xboxCopilotDetailVideoPoster, width: 1920, height: 1080 },
@@ -125,14 +159,14 @@ export const videoMetadata: Record<string, { poster: string; width: number; heig
   [altCtrlYeahYeahYeahsVideo]: { poster: altCtrlYeahYeahYeahsVideoPoster, width: 960, height: 540 },
   [altCtrlYeahYeahYeahsDetailVideo]: { poster: altCtrlYeahYeahYeahsDetailVideoPoster, width: 1920, height: 824 },
   [dalePlayRosaliaDetailVideo]: { poster: dalePlayRosaliaDetailVideoPoster, width: 1920, height: 824 },
-  [dxl03Video]: { poster: dxl03VideoPoster, width: 1920, height: 1920 },
-  [dxl04Video]: { poster: dxl04VideoPoster, width: 1920, height: 1920 },
+  [dxl03Video]: { poster: dxl03VideoPoster, width: 1920, height: 1920, restPosters: { 6: dxl03VideoRest6 } },
+  [dxl04Video]: { poster: dxl04VideoPoster, width: 1920, height: 1920, restPosters: { 6: dxl04VideoRest6 } },
   [aListPopDuaLipaVideo]: { poster: aListPopDuaLipaVideoPoster, width: 1920, height: 1920 },
   [superbloomGothBabeVideo]: { poster: superbloomGothBabeVideoPoster, width: 1920, height: 1920 },
   [todaysCountryVideo]: { poster: todaysCountryVideoPoster, width: 1920, height: 1920 },
   [rapLifeVideo]: { poster: rapLifeVideoPoster, width: 1920, height: 1920 },
-  [dxl01Video]: { poster: dxl01VideoPoster, width: 1920, height: 1920 },
-  [nmd03Video]: { poster: nmd03VideoPoster, width: 1920, height: 1920 },
+  [dxl01Video]: { poster: dxl01VideoPoster, width: 1920, height: 1920, restPosters: { 6: dxl01VideoRest6 } },
+  [nmd03Video]: { poster: nmd03VideoPoster, width: 1920, height: 1920, restPosters: { 6: nmd03VideoRest6 } },
   [xbox2030DetailVideo]: { poster: xbox2030DetailVideoPoster, width: 1920, height: 1080 },
   [xboxDiscordDetailVideo]: { poster: xboxDiscordDetailVideoPoster, width: 1920, height: 1080 },
   [xboxDiscord2DVideo]: { poster: xboxDiscord2DVideoPoster, width: 1920, height: 1080 },
@@ -145,6 +179,11 @@ export const imageMetadata: Record<string, { width: number; height: number; srcS
   [gettyRestImage]: { width: 848, height: 1264 },
   [operaRestImage]: { width: 1080, height: 1080 },
   [weekndImage]: { width: 1254, height: 1254 },
+  [hboMaxImage]: { width: 2560, height: 1070 },
+  [eltonJohnRestImage]: { width: 1080, height: 1080 },
+  [eltonJohnImage1]: { width: 1080, height: 1080 },
+  [eltonJohnImage3]: { width: 1080, height: 1080 },
+  [eltonJohnImage4]: { width: 1080, height: 1080 },
   [xboxCopilotImage1]: { width: 1920, height: 1080 },
   [xboxCopilotImage2]: { width: 1920, height: 1080 },
   [xboxCopilotImage3]: { width: 1920, height: 1080 },

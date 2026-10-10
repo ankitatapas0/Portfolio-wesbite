@@ -14,7 +14,9 @@ type DetailPageTransitionProps = {
   disableExitMotion?: boolean;
   isOpen: boolean;
   label: string;
+  labelledBy?: string;
   onClose: () => void;
+  restoreFocus: () => void;
   className?: string;
   style?: CSSProperties;
 };
@@ -24,14 +26,19 @@ export function DetailPageTransition({
   disableExitMotion = false,
   isOpen,
   label,
+  labelledBy,
   onClose,
+  restoreFocus,
   className = "",
   style,
 }: DetailPageTransitionProps) {
   const backdropRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const scrollbarTrackRef = useRef<HTMLDivElement>(null);
   const scrollbarThumbRef = useRef<HTMLDivElement>(null);
   const scrollbarDragRef = useRef<{ pointerY: number; scrollTop: number } | null>(null);
+  const restoreFocusRef = useRef(restoreFocus);
+  restoreFocusRef.current = restoreFocus;
   const [shouldRender, setShouldRender] = useState(isOpen);
   const [isClosing, setIsClosing] = useState(false);
 
@@ -62,20 +69,83 @@ export function DetailPageTransition({
   useEffect(() => {
     if (!shouldRender) return;
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && isOpen) onClose();
-    };
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     document.body.classList.add("has-detail-page-open");
-    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.body.style.overflow = previousOverflow;
       document.body.classList.remove("has-detail-page-open");
-      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, onClose, shouldRender]);
+  }, [shouldRender]);
+
+  useEffect(() => {
+    // The exiting dialog can remain mounted beside the next project. It must
+    // release focus containment immediately, not when its exit animation ends.
+    if (!shouldRender || !isOpen) return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    const focusScope = () => document.querySelector<HTMLElement>(
+      ".expanded-media-image-frame.is-css-fullscreen",
+    ) ?? dialog;
+    const getFocusableElements = () => Array.from(
+      focusScope().querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), video[controls], [contenteditable="true"], [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter((element) => (
+      !element.hidden
+      && element.getAttribute("aria-hidden") !== "true"
+      && !element.closest("[inert]")
+      && element.getClientRects().length > 0
+    ));
+
+    dialog.focus({ preventScroll: true });
+
+    const keepFocusInsideDialog = (event: FocusEvent) => {
+      const scope = focusScope();
+      if (event.target instanceof Node && !scope.contains(event.target)) {
+        (getFocusableElements()[0] ?? dialog).focus({ preventScroll: true });
+      }
+    };
+
+    const containTabNavigation = (event: KeyboardEvent) => {
+      if (event.key !== "Tab" || event.defaultPrevented) return;
+
+      const focusableElements = getFocusableElements();
+      const first = focusableElements[0];
+      const last = focusableElements[focusableElements.length - 1];
+      const activeElement = document.activeElement;
+      const scope = focusScope();
+
+      if (!first || !last) {
+        event.preventDefault();
+        dialog.focus({ preventScroll: true });
+      } else if (
+        event.shiftKey
+        && (activeElement === first || activeElement === scope || !scope.contains(activeElement))
+      ) {
+        event.preventDefault();
+        last.focus();
+      } else if (
+        !event.shiftKey
+        && (activeElement === last || !scope.contains(activeElement))
+      ) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("focusin", keepFocusInsideDialog);
+    document.addEventListener("keydown", containTabNavigation);
+
+    return () => {
+      document.removeEventListener("focusin", keepFocusInsideDialog);
+      document.removeEventListener("keydown", containTabNavigation);
+
+      restoreFocusRef.current();
+    };
+  }, [isOpen, shouldRender]);
 
   useEffect(() => {
     if (!shouldRender) return;
@@ -166,7 +236,15 @@ export function DetailPageTransition({
   if (!shouldRender) return null;
 
   return createPortal(
-    <>
+    <div
+      ref={dialogRef}
+      className="detail-page-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={labelledBy}
+      aria-label={labelledBy ? undefined : label}
+      tabIndex={-1}
+    >
       <div
         ref={backdropRef}
         className={`detail-page-transition-backdrop${isClosing ? " is-closing" : ""}`}
@@ -183,9 +261,6 @@ export function DetailPageTransition({
         <section
           className={`detail-page-transition-content${className ? ` ${className}` : ""}`}
           style={style}
-          role="dialog"
-          aria-modal="true"
-          aria-label={label}
         >
           {children}
         </section>
@@ -209,7 +284,7 @@ export function DetailPageTransition({
       >
         <div ref={scrollbarThumbRef} className="detail-page-scrollbar-thumb" />
       </div>
-    </>,
+    </div>,
     document.body,
   );
 }
